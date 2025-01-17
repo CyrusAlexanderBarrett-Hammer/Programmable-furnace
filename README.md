@@ -16,3 +16,6 @@ The PID is run on the PC and gives signals to the Arduino when to turn on and of
 If the watchdog detects frozen PID PWM or overheat, or if serial connection is lost if that is set, it will turn off the signal to the SSR to turn off the furnace. A manual disconnection and reconnection of the Arduino controller device is required to clear the error. If there's no serial loss, the PC will be notified. An LED shows if serial communication is present. The PID can also give alarm to the PC on overheat.
 
 It can recover the serial COM if it's lost or switched, but the user needs to write the COM port being used. The system can run for days without problems.
+
+
+Currently, there's only the watchdog module, and it's settings need to be done from the Arduino code and not from a one-time setup via Labview or the GUI.
