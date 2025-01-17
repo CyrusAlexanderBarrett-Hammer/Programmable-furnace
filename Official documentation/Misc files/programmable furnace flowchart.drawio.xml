@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="25.0.3">
+  <diagram name="Page-1" id="x4evjFPlMmZSs3oU-vyj">
+    <mxGraphModel dx="3695" dy="2729" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-265" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-380" y="-360" width="1970" height="1320" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-225" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="6uHWw4SKVLwIWcmevpnY-1" target="6uHWw4SKVLwIWcmevpnY-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6uHWw4SKVLwIWcmevpnY-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Arduino powered&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="414" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6uHWw4SKVLwIWcmevpnY-5" value="&lt;font&gt;Sleep mode procedure&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="550" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6uHWw4SKVLwIWcmevpnY-16" value="A serial message has command, value, and timestamp. Only command is mandatory. See &quot;serial messages&quot;." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;" parent="1" vertex="1">
+          <mxGeometry x="-370" y="-320" width="430" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-1" value="Two-way serial communication present" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-8" value="Check for PID controller mode and then watchdog mode messages yes/no, in order. Turn modes on/off respectively." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="969.5" y="370" width="121" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-34" value="If PID controller mode, check for PID controller output pin message and then thermocouple type message, in order. Then, if watchdog mode, check for watchdog PWM pin and then SSR pin message." style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1107.5" y="370" width="163" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-39" value="Set up correct pins and register thermocouple type respectively." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1290.5" y="370" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-46" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-43" target="OXOvrPsnkMkuGvLZXwMZ-45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-43" value="Read any incoming serial message" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-132" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-45" target="OXOvrPsnkMkuGvLZXwMZ-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-170" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-45" target="OXOvrPsnkMkuGvLZXwMZ-169">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-45" value="Handshake message from PC within non-blocking timeout?" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-56" value="If the Arduino is physically disconnected it will turn off, and the setup will restart when repowered. PC won&#39;t get a ping response and will assume disconnection after some time." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;" vertex="1" parent="1">
+          <mxGeometry x="-365" y="-170" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-233" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-62" target="OXOvrPsnkMkuGvLZXwMZ-232">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-62" value="Send a ping reply message (via send message procedure)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-135" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-64" target="OXOvrPsnkMkuGvLZXwMZ-62">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-64" value="Yes." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-67" value="Critical message (see &quot;serial messages&quot;) didn&#39;t get a response after a certain number of send attempts?" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1179.75" y="-180" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-72" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-70" target="OXOvrPsnkMkuGvLZXwMZ-71">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-70" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Send message procedure&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="-160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-73" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-71" target="OXOvrPsnkMkuGvLZXwMZ-67">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-71" value="Send the message" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1040.75" y="-160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-74" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;The Arduino has no serial recovery. It replies to pings from Python, and then Python takes care of the rest on failed reply&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-370" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-209" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-80" target="OXOvrPsnkMkuGvLZXwMZ-179">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-80" value="Assume disconnection, two-way serial communication not present. Turn serial light off." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1180.25" y="-60" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-194" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-85" target="OXOvrPsnkMkuGvLZXwMZ-184">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-85" value="Send a setup completed message (via send message procedure)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1430.5" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-141" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-88" target="OXOvrPsnkMkuGvLZXwMZ-90">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-142" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-88" target="OXOvrPsnkMkuGvLZXwMZ-93">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-88" value="Emergency shutdown message yes/no" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-90" value="If yes, put Arduino under emergency shutdown. Keep PID pin and SSR off depending on if watchdog/PID mode is on, regardless, until emergency cleared (message gives no). Send emergency shutdown on/off (via send message procedure)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="630" width="120" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-231" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-93" target="OXOvrPsnkMkuGvLZXwMZ-95">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-93" value="Arduino heating on/off message, if PID mode" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-95" value="If not under an emergency, set PID pin to on/off (low/high). If yes, keep PID pin off." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="630" width="120" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-111" value="If watchdog PWM changing, set SSR pin to high. If not, set SSR pin to low and send watchdog PWM not changing message (via send message procedure)." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1270.5" y="705" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-116" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.01;entryY=0.568;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-39" target="OXOvrPsnkMkuGvLZXwMZ-85">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-117" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.003;entryY=0.368;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-8" target="OXOvrPsnkMkuGvLZXwMZ-34">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-118" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.394;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-34" target="OXOvrPsnkMkuGvLZXwMZ-39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-145" value="Program flow end until ping from PC received" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1180.25" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-169" value="If no, run sleep mode procedure." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="625" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-177" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-171" target="OXOvrPsnkMkuGvLZXwMZ-173">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-171" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Sleep mode procedure&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="686.25" y="-160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-172" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="OXOvrPsnkMkuGvLZXwMZ-173" target="OXOvrPsnkMkuGvLZXwMZ-176" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-173" value="Serial communication not present. If PID controller mode, set PID pin to low to turn off the oven. If PID controller mode unknown, move on" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="646.25" y="-75" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-198" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-176" target="OXOvrPsnkMkuGvLZXwMZ-197">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-176" value="Empty COM buffer to get rid of confusing and blocking messages" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="686.25" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-230" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-179" target="OXOvrPsnkMkuGvLZXwMZ-145">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-179" value="If PID controller mode, set PID pin to low to turn off the oven" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1180.25" y="57.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-188" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-184" target="OXOvrPsnkMkuGvLZXwMZ-187">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-192" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-184" target="OXOvrPsnkMkuGvLZXwMZ-191">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-184" value="Watchdog mode?" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1290.5" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-195" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-187" target="OXOvrPsnkMkuGvLZXwMZ-43">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-187" value="No" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1150.5" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-193" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-191" target="OXOvrPsnkMkuGvLZXwMZ-111">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-191" value="Yes" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1290.5" y="625" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-251" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-197" target="OXOvrPsnkMkuGvLZXwMZ-203">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-197" value="Ping recieved from PC?" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="686.25" y="70" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-250" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-203" target="OXOvrPsnkMkuGvLZXwMZ-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-203" value="&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;Wait forever for ping received from PC, then move on.&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;If watchdog mode on and setup completed: if watchdog PWM changing, set SSR pin to high. If not, set SSR pin to low.&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="685.13" y="140" width="129.75" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-208" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.499;entryY=0.036;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-67" target="OXOvrPsnkMkuGvLZXwMZ-80">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-227" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.014;entryY=0.378;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-1" target="OXOvrPsnkMkuGvLZXwMZ-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-235" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-232" target="OXOvrPsnkMkuGvLZXwMZ-234">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-238" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-232" target="OXOvrPsnkMkuGvLZXwMZ-88">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-232" value="System exit message set/clear" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="414" y="545" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-237" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-234" target="OXOvrPsnkMkuGvLZXwMZ-236">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-234" value="If set, put Arduino under system exit. Keep PID pin and SSR off depending on if watchdog/PID mode is on, regardless, until system exit cleared. No feedback to PC, system is shut down." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="414" y="625" width="120" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-236" value="If under system exit, run sleep mode procedure" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="414" y="780" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-247" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-239" target="OXOvrPsnkMkuGvLZXwMZ-246">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-254" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-239" target="OXOvrPsnkMkuGvLZXwMZ-253">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-239" value="Measure temperature non-blocking via timer if PID mode and no sensor error. Sensor is slow." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="545" width="120" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-257" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-241" target="OXOvrPsnkMkuGvLZXwMZ-256">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-241" value="Set sensor error. Attempt to self-solve the error via non-blocking via timer. If unsuccessful, send thermocouple error" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="720" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-242" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-93">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="575" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-249" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-246" target="OXOvrPsnkMkuGvLZXwMZ-248">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-246" value="Success" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-170" y="557.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-264" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-248" target="OXOvrPsnkMkuGvLZXwMZ-184">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="861.8181818181819" y="480" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-350" y="587" />
+              <mxPoint x="-350" y="920" />
+              <mxPoint x="1490" y="920" />
+              <mxPoint x="1490" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-248" value="Send temperature reading, if PID mode (via send message procedure)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-310" y="557.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-255" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-253" target="OXOvrPsnkMkuGvLZXwMZ-241">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-253" value="Error" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="645" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-262" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-256" target="OXOvrPsnkMkuGvLZXwMZ-259">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-256" value="Success" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-170" y="720" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-263" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="OXOvrPsnkMkuGvLZXwMZ-259" target="OXOvrPsnkMkuGvLZXwMZ-248">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-259" value="Clear sensor error" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-310" y="720" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="OXOvrPsnkMkuGvLZXwMZ-266" value="&lt;font style=&quot;font-size: 64px;&quot;&gt;Arduino side&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="417.5" y="-340" width="375" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
