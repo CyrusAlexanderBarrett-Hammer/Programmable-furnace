@@ -50,7 +50,7 @@ class ErrorTools:
         origin_function = tb.tb_frame.f_code.co_name
         return origin_function
     
-    def check_nested_error(e, exception):
+    def check_nested_error(e,  exception):
         #Check if the string for the requested nested error is in the exception
         exception_string = exception.__name__
         return True if exception_string in str(e) else False
@@ -59,14 +59,14 @@ class TimeManager:
     time_string_format = "%m/%d/%Y %H:%M:%S"
 
     class Timer:
-        def __init__(self, duration_ms):
+        def __init__(self, duration_ms = None):
             self.duration_ms = duration_ms
             self.last_blocking_timer_call = time.monotonic()
 
             self.start_time = 0
 
-            if not isinstance(self.duration_ms, (int)):
-                raise TypeError(f"duration is of type {type(self.duration)}, expected int") #Level 1
+            if not isinstance(self.duration_ms, (int, None)):
+                raise TypeError(f"duration is of type {type(self.duration).__name__}, expected int") #Level 1
             
             self.start_time = time.monotonic()
 
@@ -133,15 +133,16 @@ class StringMessageHandler:
 
     MessageStruct = namedtuple('MessageStruct', ['category', 'message']) #Categories, enforce, structure! See "signals" in the "official documentation" file.
 
+    #If the serial part of this system was a library, these should really be set by Serial Manager as a class attribute
     messages = {
-    "ping_sending": MessageStruct("1", "1"),
-    "ping_receiving": MessageStruct("1", "2"),
-    "temperature_reading": MessageStruct("2", "1"),
-    "force_emergency_stop": MessageStruct("4", "0"),
-    "emergency_alarm": MessageStruct("9, 0"),
-    "thermocouple_error": MessageStruct("9", "1"),
-    "watchog_sr_frozen": MessageStruct("9", "2"),
-    "furnace_overheat": MessageStruct("9", "3"),
+        "ping_sending": MessageStruct("1", "1"),
+        "ping_receiving": MessageStruct("1", "2"),
+        "temperature_reading": MessageStruct("2", "1"),
+        "force_emergency_stop": MessageStruct("4", "0"),
+        "emergency_alarm": MessageStruct("9, "0"),
+        "thermosensor_error": MessageStruct("9", "1"),
+        "watchog_pwm_frozen": MessageStruct("9", "2"),
+        "furnace_overheat": MessageStruct("9", "3"),
     }
 
     valid_messages = ", ".join(messages.keys())
@@ -262,14 +263,17 @@ class StringMessageHandler:
 
         return self.FullMessage(message_key, value, timestamp, message_valid)
 
+
 class SerialConnectionManager:
 
     port_initialization_time = 1.6
 
-    def __init__(self, port_name, baud_rate=9600, timeout=2, gui_queue=None):
+    def __init__(self, event_loop, port_name, baud_rate=9600, timeout=2, gui_queue=None):
         self.serial_handshake_handler = None #Needs instanciation of SerialHandshakeHandler at a higher level before being set due to circular dependencies
         self.serial_message_handler = None #Same, but for SerialMessageHandler
 
+        self.loop = event_loop
+        
         self.port_name = port_name # Store the COM port name (like COM18)
         self.baud_rate = baud_rate # Store the baud rate
         self.timeout = timeout # Store the timeout
@@ -277,31 +281,24 @@ class SerialConnectionManager:
         self.serial_port = None
         self.serial_loss = True
 
+        self.all_serial_ports = []
+
         self.recent_port_name = self.port_name #Compared with self.port_name to check port name change
         self.connect_in_progress = False
 
         self.lock = asyncio.Lock()
         self.gui_queue = gui_queue # Optional: For GUI updates
 
-        if not isinstance(self.port_name, (str, int)):
-            raise TypeError(f"port_name must be a string or int, got {type(self.port_name)}")
+        try:
+            self.set_port_name()
+        except:
+            raise
 
-        if isinstance(self.port_name, int):
-            if self.port_name < 0:
-                raise ValueError(f"port_name cannot be negative, got {self.port_name}")
-            self.port_name = "COM" + str(self.port_name)
-        elif isinstance(self.port_name, str):
-            if not re.fullmatch(r"(COM\d+|\d+)", self.port_name):
-                raise ValueError("port_name must be 'COM' followed by a number (e.g., COM18), or just a number (e.g., 18)")
-            if self.port_name.isdigit():
-                self.port_name = "COM" + str(self.port_name)
-
-        #Level 1
-        if not isinstance(baud_rate, int):
+        if not isinstance(self.baud_rate, int):
             print(f"Baudrate {self.baud_rate} not an integer")
             raise TypeError(f"Baudrate {self.baud_rate} not an integer")
-        #Level 1
-        if not isinstance(timeout, (int, float)):
+
+        elif not isinstance(self.timeout, (int, float)):
             print(f"Timeout {self.timeout} not an integer or float")
             raise TypeError(f"Timeout {self.timeout} not an integer or float")
 
@@ -323,9 +320,9 @@ class SerialConnectionManager:
 
         try:
             await self.initialize_port()
-        except Exception as e:
-            self.serial_loss = True
-            raise
+        except Exception:
+            if not ErrorTools.check_nested_error(e, "PerrmissionError"):
+                raise
 
         self.serial_message_handler.find_message("ping_sending", purge=True)
 
@@ -335,14 +332,12 @@ class SerialConnectionManager:
                 try:
                     await self.initialize_port()
                     self.recent_port_name == self.port_name
-                except:
-                    self.serial_loss = True
+                except Exception as e:
                     raise
             # Attempt to connect to the specified port
             try:
                 connection_success = await self.attempt_connection()
-            except:
-                self.serial_loss = True
+            except Exception as e:
                 raise
             #No success? Wrong! Do it again! (No dark sarcasm in the classroom)
         self.serial_loss = False #Got this far? Serial port is confirmed.
@@ -383,9 +378,11 @@ class SerialConnectionManager:
 
         await asyncio.sleep(self.port_initialization_time) # Wait for the serial port to initialize
 
-    #This
     async def clean_connection(self):
-        await self.close_connection()
+        try:
+            await self.close_connection()
+        except:
+            print(f"Serial port is not initialized.") #Then there's no problem!
         self.serial_port = None
 
     async def close_connection(self):
@@ -412,14 +409,13 @@ class SerialConnectionManager:
         
         if not self.gui_queue is None:
             if ErrorTools.check_nested_error(e, "FileNotFound"):
-                self.gui_queue.put({"serial_error": "connect device, or set correct COM port as seen in device manager"})
-            elif ErrorTools.check_nested_error(e, "FileNotFound"):
-                self.gui_queue.put({"serial_error": "verify that nothing else is using the COM port, or set correct COM port as seen in device manager"})
+                self.gui_queue.put({"serial_error": "Serial COM port not found. Connect device, or set correct COM port as seen in device manager"})
+            elif ErrorTools.check_nested_error(e, "AccessDenied"):
+                self.gui_queue.put({"serial_error": "Serial COM port allready in use or denied. Verify that nothing else is using the COM port, or set correct COM port as seen in device manager"})
             elif isinstance(e, NoPingResponseTimeoutError):
-                self.gui_queue.put({"serial_error": "Check that the device is connected to the set COM port as seen in device manager, and verify it's working."})
+                self.gui_queue.put({"serial_error": "No communication with Arduino. Check that the device is connected to the set COM port as seen in device manager, and verify it's working."})
             self.gui_queue.put({"serial_status": "serial connection lost"})
 
-    #This
     def get_connection_info(self):
         return {
             'serial_loss': self.serial_loss,
@@ -430,12 +426,28 @@ class SerialConnectionManager:
             'port_open': True if self.serial_port.is_open else False
         }
 
+    def set_port_name(self, port_name):
+        if not isinstance(port_name, (str, int)):
+            raise TypeError(f"port_name must be a string or int, got {type(port_name).__name__}")
+
+        elif isinstance(port_name, int):
+            if port_name < 0:
+                raise ValueError(f"port_name cannot be negative, got {port_name}")
+            self.port_name = "COM" + str(port_name)
+        elif isinstance(port_name, str):
+            if not re.fullmatch(r"(COM\d+|\d+)", port_name):
+                raise ValueError(f"port_name must be 'COM' followed by a number (e.g., COM18), or just a number (e.g., 18). Got {port_name}")
+            elif port_name.isdigit():
+                self.self.port_name = "COM" + str(port_name)
+
 
 class SerialMessageHandler:
 
-    def __init__(self, serial_connection_manager, string_message_handler, serial_readings_interval = 0.2):
+    def __init__(self, event_loop, serial_connection_manager, string_message_handler, serial_readings_interval = 0.2):
         self.serial_connection_manager = serial_connection_manager
         self.string_message_handler = string_message_handler
+
+        self.loop = event_loop
 
         self.serial_readings_interval = serial_readings_interval
 
@@ -446,15 +458,14 @@ class SerialMessageHandler:
         self.lock = asyncio.Lock()
 
         if not isinstance(self.serial_readings_interval, (int, float)):
-            raise TypeError(f"serial_readings_interval must be an int or float, got {type(self.serial_readings_interval)}")
+            raise TypeError(f"serial_readings_interval must be an int or float, got {type(self.serial_readings_interval).__name__}")
     
-    #This
-    def get_messages(self):
+    def get_receieved_messages(self):
         return self.received_message_buffer
 
     def find_message(self, message, purge = False):
         if message not in self.string_message_handler.messages.keys():
-            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
+            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}")
         for i in self.received_message_buffer:
             if i.message_key == message:
                 self.received_message_buffer.pop(self.received_message_buffer.index(i))
@@ -494,7 +505,7 @@ class SerialMessageHandler:
             if pull:
                 try:
                     await self.serial_message_handler.store_all_messages_async()
-                except Exception as e:
+                except (FileNotFoundError, PermissionError) as e:
                     raise e
 
             found_message = self.find_message(message)
@@ -512,24 +523,23 @@ class SerialMessageHandler:
         except:
             raise
 
-    #This
     async def pass_message_async(self, message, value=None, timestamp=None):
+        if not isinstance(message, str):
+                raise TypeError("Message is not a string") #Level 1
+
         if message not in self.string_message_handler.messages.keys():
             raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
 
         if not isinstance(timestamp, (datetime, type(None))):
-            raise TypeError(f"Timestamp is of type {type(timestamp).__name__}; expected datetime or None") #Level 1
+            raise InvalidTimestampTypeError(f"Timestamp is of type {type(timestamp).__name__}; expected datetime or None") #Level 1
 
         full_message = self.string_message_handler.FullMessage(message, value, timestamp)
-        try:
-            encoded_message = self.string_message_handler.encode_message(full_message)
-        except InvalidTimestampTypeError:
-            raise InvalidTimestampTypeError(f"Timestamp is of type {type(timestamp).__name__}; expected datetime or None")
+        encoded_message = self.string_message_handler.encode_message(full_message)
         built_message = self.string_message_handler.build_message(encoded_message)
 
         try:
             await self.send_message_async(built_message)
-        except Exception as e:
+        except (FileNotFoundError, PermissionError) as e:
             print(f"Error sending message: {e}")
             raise
 
@@ -544,9 +554,6 @@ class SerialMessageHandler:
         return decoded_message
 
     async def send_message_async(self, message):
-        if not isinstance(message, str):
-            raise TypeError("Message is not a string") #Level 1
-
         loop = asyncio.get_running_loop()
 
         async with self.lock:
@@ -555,8 +562,10 @@ class SerialMessageHandler:
             except (serial.SerialException, Exception) as e:
                 print(f"Message not sent: {e}")
                 if ErrorTools.check_nested_error(e, FileNotFoundError):
+                    self.serial_connection_manager.update_for_serial_error(FileNotFoundError)
                     raise FileNotFoundError #Level 1
                 elif ErrorTools.check_nested_error(e, PermissionError):
+                    self.serial_connection_manager.update_for_serial_error(PermissionError)
                     raise PermissionError #Level 1
 
         print(f"Sent: {message.encode('utf-8')}")
@@ -573,8 +582,10 @@ class SerialMessageHandler:
             except (serial.SerialException, Exception) as e:
                 print(f"Message not sent: {e}")
                 if ErrorTools.check_nested_error(e, FileNotFoundError):
+                    self.serial_connection_manager.update_for_serial_error(FileNotFoundError)
                     raise FileNotFoundError #Level 1
                 elif ErrorTools.check_nested_error(e, PermissionError):
+                    self.serial_connection_manager.update_for_serial_error(PermissionError)
                     raise PermissionError #Level 1
 
         print(f"Received: {message_decoded}")
@@ -596,16 +607,18 @@ class SerialMessageHandler:
                 self.store_all_messages_async()
                 await asyncio.sleep(interval)
         except (FileNotFoundError, PermissionError) as e:
-            self.serial_connection_manager.update_for_serial_error(e)
+            print(f"Serial readings failed: {e}")
         except asyncio.CancelledError:
             print("Serial reading loop cancelled.")
 
 class SerialHandshakeHandler:
 
-    def __init__(self, serial_connection_manager, serial_message_handler, handshake_message="ping_sending", handshake_response = "ping_receiving", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
+    def __init__(self, event_loop, serial_connection_manager, serial_message_handler, handshake_message="ping_sending", handshake_response = "ping_receiving", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
         self.serial_message_handler = serial_message_handler
         self.string_message_handler = self.serial_message_handler.string_message_handler
         self.serial_connection_manager = serial_connection_manager
+
+        self.event_loop = event_loop
 
         self.handshake_message = handshake_message
         self.handshake_response = handshake_response
@@ -620,11 +633,11 @@ class SerialHandshakeHandler:
         self.lock = asyncio.Lock()
 
         if not type(self.handshake_message) is str:
-            raise TypeError(f"handshake_message must be a string, got {type(self.handshake_message)}")
+            raise TypeError(f"handshake_message must be a string, got {type(self.handshake_message).__name__}")
         elif not self.handshake_message in self.string_message_handler.messages.keys():
             raise KeyError(f"handshake_message message type '{self.handshake_message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
         elif not type(self.handshake_response) is str:
-            raise TypeError(f"handshake_response must be a string, got {type(self.handshake_response)}")
+            raise TypeError(f"handshake_response must be a string, got {type(self.handshake_response).__name__}")
         elif not self.handshake_response in self.string_message_handler.messages.keys():
             raise KeyError(f"handshake_response message type '{self.handshake_response}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
 
@@ -665,6 +678,9 @@ class SerialHandshakeHandler:
                 await asyncio.sleep(interval)
         except NoPingResponseTimeoutError as e:
             self.serial_connection_manager.update_for_serial_error(e)
+            print(f"Arduino didn't respond to ping for {no_response_timeout} seconds.")
+        except FileNotFound, AccessDenied as e:
+            print(f"Ping failed: {e}")
         except asyncio.CancelledError: #Level 1
             print("Ping loop cancelled.")
 
@@ -682,29 +698,31 @@ class SerialHandshakeHandler:
 
 
 class SerialManager():
+    #See comment in interface class
     """
     Central manager for all serial communication functionalities.
     Encapsulates connection management, message handling, and handshake processes.
     """
 
-    def __init__(self, gui_queue = None):
-        self.port_name = None
-        self.baud_rate = None
-        self.timeout = None
-        self.serial_readings_interval = None
-        self.handshake_message = None
-        self.handshake_response = None
-        self.ping_interval = None
-
+    def __init__(self, event_loop, gui_queue = None):
+        self.loop = async_loop
         self.gui_queue = gui_queue
+        
+        self.port_name = ""
+        self.baud_rate = 0
+        self.timeout = 0
+        self.serial_readings_interval = 0
+        self.handshake_message = ""
+        self.handshake_response = ""
+        self.ping_interval = 0
 
         self.string_message_handler = None
         self.serial_connection_manager = None
         self.serial_message_handler = None
         self.serial_handshake_handler = None
 
-        self.serial_connection_manager.serial_handshake_handler = self.serial_handshake_handler #Working around circular dependencies. This is sketchy, sorry, it works though
-        self.serial_connection_manager.serial_message_handler = self.serial_message_handler
+        self.messages = {}
+        self.valid_messages = ""
 
         self.loop = asyncio.new_event_loop() # Create a new event loop
 
@@ -722,33 +740,80 @@ class SerialManager():
         self.ping_timeout = ping_timeout
         self.no_ping_respone_timeout = self.no_ping_respone_timeout
 
-        self.string_message_handler = StringMessageHandler()
-        self.serial_connection_manager = SerialConnectionManager(self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
-        self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager, self.string_message_handler)
-        self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
+        try:
+            #Input from GUI or unimplemented Labview starts serial processes when values like the COM port is known.
+            self.string_message_handler = StringMessageHandler(self.messages)
+            self.serial_connection_manager = SerialConnectionManager(self.loop, self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
+            self.serial_message_handler = SerialMessageHandler(self.loop, self.serial_connection_manager, self.string_message_handler)
+            self.serial_handshake_handler = SerialHandshakeHandler(self.loop, self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
+        except (ValueError, TypeError, KeyError): #This is an entry point, but copy-pasting 50 lines of code is avoided.
+            raise
+        
+        #If the serial part of this system was a library, these should really be set in serial manager as a class attribute
+        self.messages = self.string_mesage_handler.messages
+        self.valid_messages = self.string_message_handler.valid_messages
 
     async def setup_serial(self):
         try:
             await self.serial_connection_manager.setup_COM()
+        except asyncio.CancelledError:
+            await self.clean_connection()
+            print("Setup cancelled.")
         except Exception as e:
-            print("Setup failed. Failed to complete handshake.")
-            if not self.gui_queue is None:
-                self.gui_queue.put("Setup failed. Failed to complete handshake.")
-            return
-        self.serial_message_handler.start_serial_readings()
-        if not self.gui_queue is None:
-            self.gui_queue.put("Setup complete.")
+            print("Setup failed.")
+            raise
 
     async def attempt_reconnect(self):
         try:
             await self.setup_serial()
         except:
-            pass
+            print("Reconnection attempt failed.")
+            raise
+
+    async def pass_message_async(self, message, value=None, timestamp=None):
+        if not isinstance(message, str):
+                raise TypeError("Message is not a string")
+        if message not in self.messages.keys():
+            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.valid_messages}") #Level 1
+        if not isinstance(timestamp, (datetime, type(None))):
+            raise InvalidTimestampTypeError(f"Timestamp is of type {type(timestamp).__name__}; expected datetime or None") #Level 1
+
+        try:
+            await self.serial_message_handler.pass_message_async(message, value, timestamp)
+        except (FileNotFoundError, PermissionError) as e:
+            print(f"Error sending message: {e}")
+            raise
+        
+    def find_message(self, message):
+        if not isinstance(message, str):
+            raise TypeError(f"message needs to be of type str, got {type(message).__name__}.")
+        if message not in self.messages.keys():
+            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.valid_messages}")
+        return self.find_message(message)
+
+    def find_message_with_timeout(self, timer, message):
+        if not isinstance(timer, TimeManager.Timer):
+            raise TypeError(f"timer needs to be of type TimeManager.Timer, got {type(timer).__name__}.")
+        if not isinstance(message, str):
+            raise TypeError(f"message needs to be of type str, got {type(message).__name__}.")
+        return self.serial_message_handler.find_message_with_timeout(timer, message)
+
+    def set_port_name(self, port_name):
+        try:
+            self.serial_connection_manager.set_port_name
+        except:
+            raise
+
+    def get_messages(self):
+        return self.serial_message_handler.get_receieved_messages()
 
     def get_connection_info(self):
         return self.serial_connection_manager.get_connection_info()
 
-    def shutdown(self):
+    async def clean_connection(self):
+        await self.serial_connection_manager.clean_connection()
+
+    async def shutdown(self):
         """
         Gracefully shutdown the asyncio event loop and close serial connections.
         """
@@ -756,19 +821,25 @@ class SerialManager():
         self.serial_message_handler.stop_serial_readings()
         # Schedule the clean_connection coroutine in the event loop
         asyncio.run_coroutine_threadsafe(
-            self.serial_connection_manager.clean_connection(),
+            await self.serial_connection_manager.clean_connection(),
             self.loop
         )
-        self.loop.call_soon_threadsafe(self.loop.stop())
 
 
 class GUI:
+    #See comment in the interface class.
 
     gui_update_interval = 100
 
-    def __init__(self):
+    def __init__(self, event_loop):
+        self.event_loop = event_loop
+
         self.serial_manager = None #Working around circular dependencies. Will be set to SerialManager by shared reference after GUI's instanciation.
         self.serial_handshake_handler = None
+
+        self.interface = None #Interface depends on Serial Manager, and can't be set before
+
+        self.futures = []
 
         self.lock = threading.Lock()
 
@@ -792,18 +863,19 @@ class GUI:
         self.retry_button = ttk.Button(self.root, text="Retry Connection", command=self.retry_connection)
         self.retry_button.pack(pady=10)
 
-        self.serial_manager.gui_queue = self.gui_queue
-
         # Start the update loop for real-time updates
         self.root.after(self.gui_update_interval, self.check_queue)
+        self.root_after(self.)
 
-    def begin(self, serial_manager):
+    def begin(self, serial_manager, interface):
         self.serial_manager = serial_manager
         self.serial_handshake_handler = self.serial_manager.serial_handshake_handler
 
+        self.interface = interface
+
     def start_serial(self):
         if not self.serial_manager.loop.is_running():
-            self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
+            fut = self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
 
     def send_ping(self):
         # Schedule the coroutine in the event loop
@@ -832,6 +904,10 @@ class GUI:
         self.status_label.config(text=message)
 
     def check_queue(self):
+        #I'm going to poll for the futures.done and futures.result from Serial Manager and Interface here since I'm short on time
+        #More optimally: Use callbacks
+        #I currently have only COM status in the GUI's queue. Other errors are shown directly. A bit here, a bit there.
+
         try:
             while True:
                 message = self.gui_queue.get_nowait()
@@ -840,6 +916,7 @@ class GUI:
             pass
         # Schedule the next check
         self.root.after(100, self.check_queue)
+        self.root.after(50, swelf.check_futures)
 
     def run(self):
         self.root.mainloop()
@@ -847,16 +924,52 @@ class GUI:
 
 class Interface:
 
-    def __init__(self, serial_manager, gui_queue = None):
+    def __init__(self, serial_manager, event_loop):
+        # Direct method calls are used instead of a GUI queue like in the SerialManager.
+        # Using a queue system or a thread-safe data structure would likely be more optimal for both.
+        # A queue system requires centralized handling since queues operate on a FIFO basis.
+        # Currently, a queue is used for the GUI because it simplifies communication to a single destination.
+        # Moving queue initialization to the process manager level could centralize storage and resolve circular dependencies 
+        # (e.g., the GUI needing to be instantiated before the SerialManager).
+        # A unified queue could handle all updates (GUI, status, etc.), sorted into a dictionary by a high-level process.
+        #I'm short on time, though! Can't change much now.
+
         self.serial_manager = serial_manager
-        self.gui_queue = gui_queue
 
         self.main_task = None
-    
-    def 
+        self.setup_serial_task = None
+
+        self.send_emergency_stop = False
+
+        #Arduino alarm statuses
+        self.thermosensor_error = False
+        self.watchdog_pwm_frozen = False
+        self.furnace_overheat = False
+
+        self.furnace_temperature = None
+
+        if not isinstance(self.serial_manager, SerialManager):
+            raise TypeError(f"serial_manager needs to be a SerialManager object, got {type(self.serial_manager).__name__}")
+
 
     def begin(self):
-        pass #In case parameters need to be set after instanciation.
+        pass #In case parameters need to be set after instanciation, or something else
+    
+    def get_furnace_temperature_status(self):
+        return self.furnace_temperature
+
+    def get_thermosensor_error_status(self):
+        return self.thermosensor_error
+
+    def get_watchdog_pwm_frozen_status(self):
+        return self.watchdog_pwm_frozen
+    
+    def get_furnace_overheat_status(self):
+        return self.furnace_overheat
+
+    def send_emergency_stop(self):
+        self.send_emergency_stop = True
+
 
     def start_main(self):
         self.main_task = asyncio.create_task(self.run_main())
@@ -866,17 +979,50 @@ class Interface:
         if self.main_task:
             self.main_task.cancel()
 
+    def start_setup_serial(self):
+        self.setup_serial_task = asyncio.create_task(self.serial_amnager.setup_serial())
+
+    def stop_setup_serial(self):
+        # Cancel the serial reading loop task if it's running
+        if self.setup_serial_task:
+            self.setup_serial_task.cancel()
+
     async def run_main(self):
         try:
             while True:
                 connection_info = self.serial_manager.get_connection_info()
                 serial_loss = connection_info["serial_loss"]
                 if serial_loss:
-                    await self.serial_manager.setup_serial()
+                    self.serial_connection_timer = None
+                    #Will run while the rest of the code runs
+                    if not self.setup_serial_task:
+                        self.start_setup_serial()
+                else:
+                    if not self.serial_connection_timer is None:
+                
+                furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
+                self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
+
+                #The errors are only cleared Arduino-side if the Arduino is restarted. This program will need a restart too, it lackas an error clearance if no error after some time of serial communication.
+                thermosensor_error_result = self.serial_manager.find_message("thermosensor_error")
+                self.thermosensor_error = True if thermosensor_error_result is not None else None
+
+                watchdog_pwm_frozen_result = self.serial_manager.find_message("watchdog_pwm_frozen")
+                self.watchdog_pwm_frozen = True if watchdog_pwm_frozen_result is not None else None
+
+                furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
+                self.furnace_overheat = True if furnace_overheat_result is not None else None
+                
+                if send_emergency_stop:
+                    self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding! (It's official, but does not need to be flexible.)
+                
         except asyncio.CancelledError:
-            print("Serial reading loop cancelled.")
+            print("Serial reading loop cancelled. Running cleanup.")
+            self.stop_setup_serial()
+
 
 class ProcessManager:
+    #See comment in interface class
     """
     Encapsulates overall procedures for managing processes
     """
@@ -884,44 +1030,85 @@ class ProcessManager:
     def __init__(self, use_gui):
         self.use_gui = use_gui
 
+        #GUI will run in the main thread, the rest will run in a background thread
+        #Truly simultaneously running tasks is done with threads, as opposed to event loops...
+        # ...They are shortcuts to allowing other processes to run in between each other, automatically switching between async methods (or coroutines) whenever possible (like in between actions or during async sleep())
+        #If the GUI and the rest is run in the same thread, the GUI might lag.
+        #Locks (async.Lock()) forces a process to wait for accessing places in memory until no other processes do it.
+        #Using "with async.lock() means the place in memory will only be locked for as long as it's used at the moment.
+        #Threads are required to use event loops, and in turn, coroutines. Tkinter GUIs have to be run in the main thread, but does not require an event loop.
         self.gui = None
-        self.serial_manager = None
 
+        self.serial_manager = None
+        self.interface = None
+
+        # The single event loop for all async tasks. GUI has no event loop.
+        self.loop = asyncio.new_event_loop()
+
+        # Thread that will run the above loop
         self.asyncio_thread = None
 
     # Boots up the system
     def startup(self):
-        # Start asyncio event loop in a separate thread
-        self.asyncio_thread = threading.Thread(target=self.run_asyncio_loop, daemon=True)
+        #Instanciate GUI
+        if self.use_gui:
+            self.gui = GUI(self.loop)
+        else:
+            print("Starting system without GUI")
+        
+        #Instanciate async components
+        self.serial_manager = SerialManager(self.loop, gui_queue = self.gui.gui_queue)
+        self.interface = Interface(self.serial_manager, self.loop)
+
+        #Working with circular dependencies. Serial manager needed the GUI for gui_queue first
+        if self.gui:
+            self.gui.begin(self.serial_manager, self.interface)
+
+        #Start the asyncio event loop in a separate thread. It targets run_asyncio_loop to run it in the thread.
+        self.asyncio_thread = threading.Thread(target = self.run_asyncio_loop)
         self.asyncio_thread.start()
 
-        try:
-            if self.use_gui:
-                self.gui = GUI()
-                self.serial_manager = SerialManager(self.gui.gui_queue)
-                print("Starting system with GUI")
-                self.gui.begin(self.serial_manager)
-                # Run the GUI in the main thread
-                self.gui.run()
-            else:
-                print("Startung system without GUI")
-                self.serial_manager = SerialManager()
-        except KeyboardInterrupt: #Fix graceful shutdown and add more shutdown detections
-            print("Program interrupted by user.")
-            self.full_shutdown()
+        if self.gui:
+            self.gui.run()
 
     def run_asyncio_loop(self):
-        asyncio.set_event_loop(self.serial_manager.loop)
-        self.serial_manager.loop.run_until_complete(self.serial_manager.setup_serial())
-        self.serial_manager.loop.run_forever()
+        #A mew thread targets this method, so it's running there. Start the event loop self.loop in that thread.
+        asyncio.set_event_loop(self.loop)
+            
+        #Keep the event loop running and ready for use
+        self.loop.run_forever()
 
+    #Fix and use graceful shutdown and add more shutdown detections 
     def full_shutdown(self):
         self.serial_manager.shutdown()
-        self.asyncio_thread.join()
+        # Stop event loop
+        if self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+        # Join the background thread
+        if self.asyncio_thread:
+            self.asyncio_thread.join()
         print("Shutdown complete.")
 
 
-# Initialize SerialManager instance
+        # # Start asyncio event loop in a separate thread
+        # self.asyncio_thread = threading.Thread(target=self.run_asyncio_loop, daemon=True)
+        # self.asyncio_thread.start()
+
+        # try:
+        #     if self.use_gui:
+        #         self.gui = GUI()
+        #         self.serial_manager = SerialManager(self.gui.gui_queue)
+        #         print("Starting system with GUI")
+        #         self.gui.begin(self.serial_manager)
+        #         # Run the GUI in the main thread
+        #         self.gui.run()
+        #     else:
+        #         print("Starting system without GUI")
+        #         self.serial_manager = SerialManager()
+        # except KeyboardInterrupt: #Fix graceful shutdown and add more shutdown detections
+        #     print("Program interrupted by user.")
+        #     self.full_shutdown()
+
 
 use_gui = False
 
