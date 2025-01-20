@@ -135,11 +135,11 @@ class StringMessageHandler:
 
     #If the serial part of this system was a library, these should really be set by Serial Manager as a class attribute
     messages = {
-        "ping_sending": MessageStruct("1", "1"),
-        "ping_receiving": MessageStruct("1", "2"),
+        "ping_pc_arduino": MessageStruct("1", "1"),
+        "ping_arduino_pc": MessageStruct("1", "2"),
         "temperature_reading": MessageStruct("2", "1"),
         "force_emergency_stop": MessageStruct("4", "0"),
-        "emergency_alarm": MessageStruct("9, "0"),
+        "emergency_alarm": MessageStruct("9", "0"),
         "thermosensor_error": MessageStruct("9", "1"),
         "watchog_pwm_frozen": MessageStruct("9", "2"),
         "furnace_overheat": MessageStruct("9", "3"),
@@ -324,7 +324,7 @@ class SerialConnectionManager:
             if not ErrorTools.check_nested_error(e, "PerrmissionError"):
                 raise
 
-        self.serial_message_handler.find_message("ping_sending", purge=True)
+        self.serial_message_handler.find_message("ping_pc_arduino", purge=True)
 
         connection_success = False
         while not connection_success:
@@ -410,7 +410,7 @@ class SerialConnectionManager:
         if not self.gui_queue is None:
             if ErrorTools.check_nested_error(e, "FileNotFound"):
                 self.gui_queue.put({"serial_error": "Serial COM port not found. Connect device, or set correct COM port as seen in device manager"})
-            elif ErrorTools.check_nested_error(e, "AccessDenied"):
+            elif ErrorTools.check_nested_error(e, "PermissionError"):
                 self.gui_queue.put({"serial_error": "Serial COM port allready in use or denied. Verify that nothing else is using the COM port, or set correct COM port as seen in device manager"})
             elif isinstance(e, NoPingResponseTimeoutError):
                 self.gui_queue.put({"serial_error": "No communication with Arduino. Check that the device is connected to the set COM port as seen in device manager, and verify it's working."})
@@ -613,7 +613,7 @@ class SerialMessageHandler:
 
 class SerialHandshakeHandler:
 
-    def __init__(self, event_loop, serial_connection_manager, serial_message_handler, handshake_message="ping_sending", handshake_response = "ping_receiving", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
+    def __init__(self, event_loop, serial_connection_manager, serial_message_handler, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
         self.serial_message_handler = serial_message_handler
         self.string_message_handler = self.serial_message_handler.string_message_handler
         self.serial_connection_manager = serial_connection_manager
@@ -679,7 +679,7 @@ class SerialHandshakeHandler:
         except NoPingResponseTimeoutError as e:
             self.serial_connection_manager.update_for_serial_error(e)
             print(f"Arduino didn't respond to ping for {no_response_timeout} seconds.")
-        except FileNotFound, AccessDenied as e:
+        except (FileNotFoundError, PermissionError) as e:
             print(f"Ping failed: {e}")
         except asyncio.CancelledError: #Level 1
             print("Ping loop cancelled.")
@@ -705,7 +705,7 @@ class SerialManager():
     """
 
     def __init__(self, event_loop, gui_queue = None):
-        self.loop = async_loop
+        self.loop = event_loop
         self.gui_queue = gui_queue
         
         self.port_name = ""
@@ -729,7 +729,7 @@ class SerialManager():
         self.lock = asyncio.Lock()
 
 
-    async def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, handshake_message="ping_sending", handshake_response = "ping_receiving", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
+    async def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
         self.port_name = port_name
         self.baud_rate = baud_rate
         self.timeout = serial_reading_timeout
@@ -800,7 +800,7 @@ class SerialManager():
 
     def set_port_name(self, port_name):
         try:
-            self.serial_connection_manager.set_port_name
+            self.serial_connection_manager.set_port_name(port_name)
         except:
             raise
 
@@ -826,20 +826,21 @@ class SerialManager():
         )
 
 
+
+
+
 class GUI:
     #See comment in the interface class.
 
     gui_update_interval = 100
 
-    def __init__(self, event_loop):
+    def __init__(self, background_to_main_thread_interface, event_loop):
         self.event_loop = event_loop
 
         self.serial_manager = None #Working around circular dependencies. Will be set to SerialManager by shared reference after GUI's instanciation.
         self.serial_handshake_handler = None
 
         self.interface = None #Interface depends on Serial Manager, and can't be set before
-
-        self.futures = []
 
         self.lock = threading.Lock()
 
@@ -865,7 +866,6 @@ class GUI:
 
         # Start the update loop for real-time updates
         self.root.after(self.gui_update_interval, self.check_queue)
-        self.root_after(self.)
 
     def begin(self, serial_manager, interface):
         self.serial_manager = serial_manager
@@ -873,17 +873,13 @@ class GUI:
 
         self.interface = interface
 
-    def start_serial(self):
-        if not self.serial_manager.loop.is_running():
-            fut = self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
+    def start_setup_serial(self):
+        self.gui_thread_interface.start_setup_serial()
 
     def send_ping(self):
         # Schedule the coroutine in the event loop
         if self.serial_manager.loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                self.serial_handshake_handler.ping_handshake(),
-                self.serial_manager.loop
-            )
+            self.serial_handshake_handler.ping_handshake()
             self.update_status_label("Status: Ping sent!")
         else:
             self.update_status_label("Status: Event loop not running.")
@@ -891,10 +887,7 @@ class GUI:
     def retry_connection(self):
         # Schedule the setup_serial coroutine in the event loop
         if self.serial_manager.loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                self.serial_manager.setup_serial(),
-                self.serial_manager.loop
-            )
+            self.serial_manager.setup_serial()
             self.update_status_label("Status: Retrying connection...")
         else:
             self.update_status_label("Status: Event loop not running.")
@@ -916,7 +909,6 @@ class GUI:
             pass
         # Schedule the next check
         self.root.after(100, self.check_queue)
-        self.root.after(50, swelf.check_futures)
 
     def run(self):
         self.root.mainloop()
@@ -979,8 +971,10 @@ class Interface:
         if self.main_task:
             self.main_task.cancel()
 
-    def start_setup_serial(self):
+    def start_setup_serial(self, port_name):
+        self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
         self.setup_serial_task = asyncio.create_task(self.serial_amnager.setup_serial())
+        
 
     def stop_setup_serial(self):
         # Cancel the serial reading loop task if it's running

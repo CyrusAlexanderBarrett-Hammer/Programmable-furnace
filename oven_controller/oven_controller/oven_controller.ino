@@ -1,16 +1,71 @@
-//TODO: Make an instantiable struct object for time and date time stamps.
-
 #include "String.h"
 
 #include <Adafruit_MAX31856.h>
 #include <SPI.h>;
 
-const String negativeOneSentinel = "-1"; //Nan equivalent for when NaN can't be used, use well; universal
+const String negativeOneSentinel = "-1"; //Nan equivalent for when NaN can't be used. Can be used anywhere, but NaN should be used where possible
 
-float devDelay = 100; //A stalling delay for development, in milliseconds
+float devDelay = 100; //A stalling delay for use in development, in milliseconds
+
+class Timer
+{
+  private:
+    unsigned long durationMs;
+    unsigned long startTime;
+  
+  public:
+    // Constructor with an additional parameter to start as timed out
+    Timer(unsigned long _durationMs = 0, bool _startTimedOut = false)
+      : durationMs(_durationMs)
+    {
+        if (_startTimedOut) {
+            // timedOut() will return true immediately
+            startTime = millis() - durationMs;
+        } else {
+            startTimer(); // Start the timer normally
+        }
+    }
+
+    void startTimer()
+    {
+      startTime = millis();
+    }
+
+    void resetTimer()
+    {
+      startTime = millis();
+    }
+
+    unsigned long getElapsedTimeMs()
+    {
+      unsigned long currentTime = millis();
+      unsigned long deltaTime = currentTime - startTime;
+      return deltaTime;
+    }
+
+    float getElapsedTimeS()
+    {
+      float timeInSeconds = getElapsedTimeMs() / 1000;
+      return timeInSeconds;
+    }
+
+    bool timedOut()
+    {
+      unsigned long elapsedTime = getElapsedTimeMs();
+
+      if(elapsedTime >= durationMs)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+};
 
 //Oven status and settings
-typedef struct OvenData
+typedef struct Oven
 {
   //args: max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
 
@@ -31,16 +86,18 @@ typedef struct OvenData
   float tempGoal = 30; //Degrees
 
 
-  OvenData(uint8_t _maxCS, int _heatingElement, bool _heatingOverride, bool _useHeatingSimulation, uint8_t _tcType = 3) //Constructor for setting values
-          : maxSensor(_maxCS), heatingElement(_heatingElement), heatingOverride(_heatingOverride), useHeatingSimulation(_useHeatingSimulation), tcType(_tcType) {} //_maxCS tself is not set here, as it's an instanciation
+  Oven(uint8_t _maxCS, int _heatingElement, bool _heatingOverride = false, bool _useHeatingSimulation = false, uint8_t _tcType = 3) //Constructor for setting values
+          : maxSensor(_maxCS), heatingElement(_heatingElement), heatingOverride(_heatingOverride), useHeatingSimulation(_useHeatingSimulation), tcType(_tcType) {} //Allready existing maxSensor object is set and initialized with the value of _maxCS
 
   void begin()
   {
-    maxSensor.setThermocoupleType(tcType);
     maxSensor.begin();
+    maxSensor.setThermocoupleType(tcType);
     pinMode(heatingElement, OUTPUT);
-    digitalWrite(heatingElement, LOW); //Keep oven securely off until 
+    digitalWrite(heatingElement, LOW);
   }
+
+  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, tc type etc (see "signals" in the documentation)
 };
 
 //Simulation status and settings, not important for the system, and can optionally be ignored
@@ -73,7 +130,7 @@ typedef struct SimulationData
 //Sorry about these being global, they should all be in SerialMessageHandler, StringMessageHandler, or in header files
 typedef struct MessageStruct
 {
-  char category;
+  char category; //Categories enforce structure
   char message;
 };
 
@@ -84,27 +141,55 @@ typedef struct ParsedMessageStruct
   float value;
   String timestamp;
 };
-ParsedMessageStruct parsedMessageStruct;
 
 namespace Messages{
   //Pre-written instructions
-  static const MessageStruct PING_SENDING = {'1', '2'};
-  static const MessageStruct PING_RECEIVING = {'1', '1'};
+  //Categories encforce structure.
+  static const MessageStruct PING_ARDUINO_PC = {'1', '2'}; //Sent to PC
+  static const MessageStruct PING_PC_ARDUINO = {'1', '1'}; //Received from PC
 
-  //Allows iteration by using pointers to memory address, unlike structs
+  static const MessageStruct TEMPERATURE_READING = {'2', '1'}; //Sent to PC
+
+  static const MessageStruct FORCE_EMERGENCY_STOP = {'4', '0'}; //Received from PC
+
+  static const MessageStruct EMERGENCY_ALARM = {'9', '0'}; //Sent to PC
+  static const MessageStruct THERMOCOUPLE_ERROR = {'9', '1'}; //Sent to PC
+  static const MessageStruct WATCHDOG_SR_LATCH_FROZEN_HIGH = {'9', '2'}; //Sent to PC. The furnace heating signal is stuck to high.
+  static const MessageStruct FURNACE_OVERHEAT = {'2', '1'}; //Sent to PC
+
+  //Allows iteration by using pointers to Messages' memory addresses, unlike iterating over their structs directly
   const MessageStruct* messagePointers[] = {
-    &Messages::PING_SENDING,
-    &Messages::PING_RECEIVING
+    &Messages::PING_ARDUINO_PC,
+    &Messages::PING_PC_ARDUINO,
+    &Messages::TEMPERATURE_READING,
+    &Messages::FORCE_EMERGENCY_STOP,
+    &Messages::EMERGENCY_ALARM,
+    &Messages::THERMOCOUPLE_ERROR,
+    &Messages::WATCHDOG_SR_LATCH_FROZEN_HIGH,
+    &Messages::FURNACE_OVERHEAT
   };
 
   static constexpr size_t NUM_MESSAGES = sizeof(messagePointers) / sizeof(messagePointers[0]); //size calculations are platform independent unlike integers, size_t bridges the gap
 };
 
+
+//Timeout durations for sending any outgoing messages to avoid overcrowding the serial buffer.
+namespace MessageTimeouts {
+  // Instantiate Timer for each message with specific timeout durations
+  //What about PING_ARDUINO_PC_TIMER? It has no timeout since it responds once on ping from PC.
+  //FORCE_EMERGENCY_STOP is sent from Python on the computer, so the timeout is handled there
+  static Timer TEMPERATURE_READING(1500, true); //Milliseconds
+  static Timer EMERGENCY_ALARM(1000, true); //Milliseconds
+  static Timer THERMOCOUPLE_ERROR(1000, true); //Milliseconds
+  static Timer WATCHDOG_SR_LATCH_FROZEN_HIGH(1000, true); //Milliseconds
+  static Timer FURNACE_OVERHEAT(1000, true); //Milliseconds
+}
+
 class SerialHandshakeHandler
 {
   public:
     static bool checkHandshake(const ParsedMessageStruct *message) {
-      if(message->message == &Messages::PING_RECEIVING)
+      if(message->message == &Messages::PING_PC_ARDUINO)
         return true;
       else {
         return false;
@@ -124,12 +209,7 @@ class SerialHandshakeHandler
 class SerialConnectionManager{
 
   public:
-    enum CommunicationStatus{
-      unknown,
-      connected,
-      disconnected
-    };
-    CommunicationStatus communicationStatus = unknown;
+    bool serialLoss = true;
 
     void begin(unsigned long baudRate = 9600){
       Serial.begin(baudRate);
@@ -194,7 +274,8 @@ class StringMessageHandler
       return buildtMessage;
     }
 
-    ParsedMessageStruct* parseMessage (const String &message, ParsedMessageStruct &parsed){ //Deconstructs a serial message in the format category,message,value,timestamp\n(\n is optional)
+    ParsedMessageStruct parseMessage (const String &message){ //Deconstructs a serial message in the format category,message,value,timestamp\n(\n is optional)
+      ParsedMessageStruct parsed;
       if(message != negativeOneSentinel){
         int commaIndex = 0;
 
@@ -249,7 +330,7 @@ class StringMessageHandler
         parsed.timestamp = negativeOneSentinel;
         int dummyVariable = 0; //Add some error handling here
       }
-      return &parsed;
+      return parsed;
     }
 
 
@@ -262,7 +343,7 @@ class StringMessageHandler
     ~StringMessageHandler() { //(singleton implementation, I just copy-paste)
     }
 
-    char message_part_separator = ",";
+    char message_part_separator = ',';
 
     const MessageStruct* findMessage(char category, char message){
       for(size_t i = 0; i < Messages::NUM_MESSAGES; ++i){
@@ -293,11 +374,11 @@ class SerialMessageHandler
       sendMessage(outgoingMessage);
     }
 
-    ParsedMessageStruct* getMessage(ParsedMessageStruct &parsed)
+    ParsedMessageStruct getMessage()
     {
       String incomingMessage = receiveMessage();
-      stringMessageHandler.parseMessage(incomingMessage, parsed);
-      return &parsed;
+      ParsedMessageStruct parsed = stringMessageHandler.parseMessage(incomingMessage);
+      return parsed;
     }
 
     // Sends the message via Serial
@@ -321,7 +402,7 @@ class SerialMessageHandler
 
 
   private:
-    // Private constructor to prevent external instantiation
+    // Private constructor to prevent external instantiation more than once
     SerialMessageHandler() {
     }
 
@@ -334,108 +415,7 @@ class SerialMessageHandler
 };
 
 
-//max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
-OvenData oven1Data(10, 5, false, false);
-
-//All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
-SimulationData oven1SimulationData (devDelay / 1000);
-
-SerialMessageHandler &serialMessageHandler = SerialMessageHandler::getInstance();
-SerialConnectionManager &serialConnectionManager = SerialConnectionManager::getInstance();
-
-
-unsigned long currentTime; //Put in new time keeping struct
-
-//Goes in the handshake class
-//Time between Python ping
-unsigned long serialPingTime = 62000; //60 seconds, with 2 seconds margin
-unsigned long lastSerialPingTime = NAN; //Ping might never happen
-unsigned long deltaSerialPingTime = NAN; //Ping might never happen
-//Time between ping and expected response
-unsigned long maxSerialPingReplyTime = 5000;
-unsigned long lastSerialPingReplyTime;
-unsigned long deltaSerialPingReplyTime;
-
-
-void setup() {
-  serialConnectionManager.begin();
-  oven1Data.begin();
-  pinMode(3, OUTPUT);
-}
-
-void loop() {
-  currentTime = millis(); //Put in a getTime method, in a new timekeeping struct
-
-  ParsedMessageStruct *message = serialMessageHandler.getMessage(parsedMessageStruct);
-
-  // if(message->message == &Messages::PING_RECEIVING){
-  //   digitalWrite(3, HIGH);
-  // }
-
-
-  // //Get all of this, including whatever in the global scope they use, into their structs or classes, in batch
-  // if(SerialHandshakeHandler::checkHandshake(message)){
-    serialConnectionManager.communicationStatus = SerialConnectionManager::CommunicationStatus::connected;
-  //   serialMessageHandler.passMessage(Messages::PING_SENDING);
-  //   lastSerialPingTime = currentTime;
-  // }
-
-  
-  // if(!isnan(lastSerialPingTime)){
-  //   deltaSerialPingTime = currentTime - lastSerialPingTime;
-  // }
-  // if(SerialConnectionManager::CommunicationStatus::connected && deltaSerialPingTime >= serialPingTime){
-  //   serialConnectionManager.communicationStatus = SerialConnectionManager::CommunicationStatus::disconnected;
-  // }
-
-  //Procedure for the connectivity recheck: Send a ping to python every 60 seconds, then return to main loop and keep reading the serial port.
-  //Look for reply message, and if there's no response within five deltatime seconds, assume disconnection.
-  //It avoids the need for a big, big buffer array, and eliminates pot luck of receiving the message at the right time completely.
-  //It's non-blocking. 
-  
-
-  // delay(1000);
-  // // put your main code here, to run repeatedly:
-  // delay(devDelay);
-
-  if (oven1Data.useHeatingSimulation) {
-    oven1Data.currentTemp = tempSimulation(oven1Data.heatingOn, oven1Data.currentTemp, oven1SimulationData);
-  } else {
-    oven1Data.currentTemp = oven1Data.maxSensor.readThermocoupleTemperature();
-  }
-
-  if (oven1Data.currentTemp <= oven1Data.tempGoal) {
-    oven1Data.heatingOn = true;
-  } else {
-    oven1Data.heatingOn = false;
-  }
-
-  if (oven1Data.heatingOverride) {
-    digitalWrite(oven1Data.heatingElement, LOW);
-  }
-  else
-  {
-    if (oven1Data.heatingOn) {
-      digitalWrite(oven1Data.heatingElement, HIGH);
-    }
-    else
-    {
-      digitalWrite(oven1Data.heatingElement, LOW);
-    }
-  }
-
-  Serial.println(oven1Data.currentTemp);
-
-  // Serial.println(oven1Data.currentTemp);
-  // Serial.println(oven1Data.heatingOn);
-  // // // digitalWrite(oven1Data.heatingElement, HIGH);
-  // // // delay(2000);
-  // // // digitalWrite(oven1Data.heatingElement, LOW);
-  // // // delay(2000);
-  // Serial.println("01,02,NaN,NaN");
-}
-
-//Simulation, not important for the system, and can optionally be ignored
+//Furnace heating simulation, not important for the system, and can optionally be ignored
 float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulationData) {
 
   if(heatingOn)
@@ -498,4 +478,113 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
   simulationData.currentTemp = Tnew;
 
   return simulationData.currentTemp;
+}
+
+//max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
+Oven oven1(10, 5, false, false);
+
+//All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
+SimulationData oven1SimulationData (devDelay / 1000);
+
+SerialMessageHandler &serialMessageHandler = SerialMessageHandler::getInstance();
+SerialConnectionManager &serialConnectionManager = SerialConnectionManager::getInstance();
+
+
+unsigned long currentTime; //Put in new time keeping struct
+
+//Goes in the handshake class
+//Time between Python ping
+unsigned long serialPingTime = 62000; //60 seconds, with 2 seconds margin
+unsigned long lastSerialPingTime = NAN; //Ping might never happen
+unsigned long deltaSerialPingTime = NAN; //Ping might never happen
+//Time between ping and expected response
+unsigned long maxSerialPingReplyTime = 5000;
+unsigned long lastSerialPingReplyTime;
+unsigned long deltaSerialPingReplyTime;
+
+
+void setup() {
+  serialConnectionManager.begin();
+  oven1.begin();
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+
+  currentTime = millis(); //Put in a getTime method, in a new timekeeping struct
+
+  ParsedMessageStruct message = serialMessageHandler.getMessage();
+
+  if(MessageTimeouts::THERMOCOUPLE_ERROR.timedOut())
+  {
+    serialMessageHandler.passMessage(Messages::THERMOCOUPLE_ERROR);
+    MessageTimeouts::THERMOCOUPLE_ERROR.resetTimer();
+  }
+  if(MessageTimeouts::TEMPERATURE_READING.timedOut())
+  {
+    serialMessageHandler.passMessage(Messages::TEMPERATURE_READING);
+    MessageTimeouts::TEMPERATURE_READING.resetTimer();
+  }
+
+  // if(message->message == &Messages::PING_PC_ARDUINO){
+  //   digitalWrite(3, HIGH);
+  // }
+
+
+  // //Get all of this, including whatever in the global scope they use, into their structs or classes, in batch
+  // if(SerialHandshakeHandler::checkHandshake(message)){
+    serialConnectionManager.serialLoss = false;
+  //   serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
+  //   lastSerialPingTime = currentTime;
+  // }
+
+  
+  // if(!isnan(lastSerialPingTime)){
+  //   deltaSerialPingTime = currentTime - lastSerialPingTime;
+  // }
+  // if(SerialConnectionManager.serialLoss = false && deltaSerialPingTime >= serialPingTime){
+  //   serialConnectionManager.serialLoss = SerialConnectionManager.serialLoss = true;
+  // }
+  
+
+  // delay(1000);
+  // // put your main code here, to run repeatedly:
+  // delay(devDelay);
+
+  if (oven1.useHeatingSimulation) {
+    oven1.currentTemp = tempSimulation(oven1.heatingOn, oven1.currentTemp, oven1SimulationData);
+  } else {
+    oven1.currentTemp = oven1.maxSensor.readThermocoupleTemperature();
+  }
+
+  if (oven1.currentTemp <= oven1.tempGoal) {
+    oven1.heatingOn = true;
+  } else {
+    oven1.heatingOn = false;
+  }
+
+  if (oven1.heatingOverride) {
+    digitalWrite(oven1.heatingElement, LOW);
+  }
+  else
+  {
+    if (oven1.heatingOn) {
+      digitalWrite(oven1.heatingElement, HIGH);
+    }
+    else
+    {
+      digitalWrite(oven1.heatingElement, LOW);
+    }
+  }
+
+  Serial.println(oven1.currentTemp);
+  Serial.println("Der!");
+
+  // Serial.println(oven1.currentTemp);
+  // Serial.println(oven1.heatingOn);
+  // // // digitalWrite(oven1.heatingElement, HIGH);
+  // // // delay(2000);
+  // // // digitalWrite(oven1.heatingElement, LOW);
+  // // // delay(2000);
+  // Serial.println("01,02,NaN,NaN");
 }
