@@ -64,13 +64,76 @@ class Timer
     }
 };
 
+typedef class Max31856FaultHandler
+{
+  u_int8_t maxCS
+
+  const unsigned long sensorMeasurementTime = 20; //The sensor needs 20 seconds to update temperature measurement for value comparisons. Hardware limitation.
+
+  float temperatureReference = NAN;
+  float temperatureNew;
+
+  int maxFailAttempts = 3;
+  int failCount = 0;
+
+  bool override_update_fail = true //Use new temperature after next iteration after resetting the sensor before increasing fail count
+
+  Timer recheck_reading_timer(sensorMeasurementTime, true);
+
+  Max31856FaultHandler(uint8_t _maxCS) //Constructor for setting values
+          : maxCS(_maxCS) {}
+
+  void resetThermocouple(){
+    digitalWrite(maxCS, LOW);  // Select the MAX31856 via chip select
+    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE1)); //I SPENT AGES FINDING THIS! :-D
+    SPI.transfer(0x0F);  // Write address (0x0F) with write command
+    SPI.transfer(0x00);  // Write any byte to the register to clear the fault
+    SPI.endTransaction();
+    digitalWrite(maxCS, HIGH);  // Deselect the MAX31856 via chip select
+  }
+
+  bool handlePotentialFault(float temperature_reading)
+  {
+    if(recheck_reading_timer.timed_out())
+    {
+      temperatureNew = temperature_reading;
+      if(((!isnan(temperatureReference)) && (temperatureNew == temperatureReference)) || isnan(temperatureNew))
+      {
+        resetThermocouple();
+        if(override_update_fail)
+        {
+          override_update_fail = false;
+          return true; //Let's see if the error is still there next time
+        }
+        override_update_fail = true //Ready for a new chance?
+        failCount += 1; //Error not cleared
+      }
+      else
+      {
+        failCount = 0;
+      }
+
+      temperatureReference = temperatureNew;
+
+      if(failCount >= maxFailAttempts)
+      {
+        return false;
+      }
+      else
+      {
+        return true;
+      }
+    }
+  }
+};
+
 //Oven status and settings
 typedef struct Oven
 {
   //args: max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
 
-  //Simulation, heating override, etc adjustable for each individual oven
-
+  //Simulation, heating override, etc adjustable for each individual oven if relevant
+  
   const int heatingElement; //Oven controll pin
 
   const Adafruit_MAX31856 maxSensor;
@@ -80,24 +143,39 @@ typedef struct Oven
   bool heatingOn;
   float currentTemp;
 
+  bool temperature_sensor_fail_alarm = false;
+
   //Settings
-  const bool heatingOverride = true; //Force actual heater to be off? Won't effect anything else.
-  const bool useHeatingSimulation = true; //Ignore thermo sensor and fake temperature from controlled heating algorithm
-  float tempGoal = 30; //Degrees
+  const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
+  const bool useHeatingSimulation; //Ignore thermo sensor and fake temperature from controlled heating algorithm
+  float tempGoal; //Degrees
+  float absoluteMaxTemp;
+
+  Max31856FaultHandler max31856FaultHandler;
 
 
-  Oven(uint8_t _maxCS, int _heatingElement, bool _heatingOverride = false, bool _useHeatingSimulation = false, uint8_t _tcType = 3) //Constructor for setting values
-          : maxSensor(_maxCS), heatingElement(_heatingElement), heatingOverride(_heatingOverride), useHeatingSimulation(_useHeatingSimulation), tcType(_tcType) {} //Allready existing maxSensor object is set and initialized with the value of _maxCS
+  Oven(uint8_t _maxCS, int _heatingElement, float _tempGoal, float _absoluteMaxTemp, bool _heatingOverride = false, bool _useHeatingSimulation = false, uint8_t _tcType = 3) //Constructor for setting values
+          : maxSensor(_maxCS), heatingElement(_heatingElement), tempGoal(_tempGoal), absoluteMaxTemp(_absoluteMaxTemp), heatingOverride(_heatingOverride), useHeatingSimulation(_useHeatingSimulation), tcType(_tcType) //Allready existing maxSensor object is set and initialized with the value of _maxCS
+          {max31856FaultHandler = Max31856FaultHandler(_maxCS);}
 
   void begin()
   {
-    maxSensor.begin();
-    maxSensor.setThermocoupleType(tcType);
+    if !(maxSensor.begin() && maxSensor.isConnected() && maxSensor.setThermocoupleType(tcType);) //True if sensor initialization was successful, it's connected, and the thermocouple type was correct
+    {
+      temperature_sensor_fail_alarm = true;
+    }
+    
     pinMode(heatingElement, OUTPUT);
     digitalWrite(heatingElement, LOW);
   }
 
-  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, tc type etc (see "signals" in the documentation)
+  float read_temperature()
+  {
+    currentTemp = maxSensor.readThermocoupleTemperature();
+    temperature_sensor_fail_alarm = max31856FaultHandler.handlePotentialFault(currentTemp); //Alarm goes on if sensor is confirmed failed.
+  }
+
+  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, tc type etc (see "signals" in the documentation)
 };
 
 //Simulation status and settings, not important for the system, and can optionally be ignored
@@ -481,7 +559,7 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 }
 
 //max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
-Oven oven1(10, 5, false, false);
+Oven oven1(10, 5, 30, 50, false, false);
 
 //All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
 SimulationData oven1SimulationData (devDelay / 1000);
@@ -552,9 +630,12 @@ void loop() {
   // delay(devDelay);
 
   if (oven1.useHeatingSimulation) {
+    //Why isn't the oven1SimulationData instanciated inside the oven1 object like everything else!!! It could always be changed again to be passed as a parameter if it uses too many resources.
     oven1.currentTemp = tempSimulation(oven1.heatingOn, oven1.currentTemp, oven1SimulationData);
   } else {
-    oven1.currentTemp = oven1.maxSensor.readThermocoupleTemperature();
+    if(!oven1.temperature_sensor_fail_alarm){
+      oven1.currentTemp = oven1.read_temperature(); 
+    }
   }
 
   if (oven1.currentTemp <= oven1.tempGoal) {
