@@ -260,6 +260,8 @@ struct Watchdog
             srLatchFrozenWatchdog = new SrLatchFrozenWatchdog(_srLatchHighDurationMs, _srLatchResetPin, _srLatchOutputPin);
           }
         }
+
+    //Maybe make methods to call the two watchdog's methods, and implement direct access to their variables from here too.
 };
 
 //Oven status and settings
