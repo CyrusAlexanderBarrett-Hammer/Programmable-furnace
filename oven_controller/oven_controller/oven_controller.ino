@@ -3,7 +3,7 @@
 #include <Adafruit_MAX31856.h>
 #include <SPI.h>;
 
-const String negativeOneSentinel = "-1"; //Nan equivalent for when NaN can't be used. Can be used anywhere, but NaN should be used where possible
+const String negativeOneSentinel = "-1"; //NAN equivalent for when NaN can't be used. Can be used anywhere, but NaN should be used where possible
 
 float devDelay = 100; //A stalling delay for use in development, in milliseconds
 
@@ -64,71 +64,206 @@ class Timer
     }
 };
 
-typedef class Max31856FaultHandler
+enum class FailStates
 {
-  u_int8_t maxCS
+  Successful,
+  Unknown,
+  Unsuccessful
+};
 
-  const unsigned long sensorMeasurementTime = 20; //The sensor needs 20 seconds to update temperature measurement for value comparisons. Hardware limitation.
+class Max31856FaultHandler
+{
+  private:
+    int8_t maxCS;
 
-  float temperatureReference = NAN;
-  float temperatureNew;
+    const unsigned long sensorMeasurementTime = 20; //The sensor needs 20 milliseconds to update temperature measurement for value comparisons. Hardware limitation.
 
-  int maxFailAttempts = 3;
-  int failCount = 0;
+    float temperatureReference = NAN;
+    float temperatureNew;
 
-  bool override_update_fail = true //Use new temperature after next iteration after resetting the sensor before increasing fail count
+    int maxFailAttempts = 3;
+    int failCount = 0;
 
-  Timer recheck_reading_timer(sensorMeasurementTime, true);
+    bool overrideUpdateFail = true; //Use new temperature after next iteration after resetting the sensor before increasing fail count
 
-  Max31856FaultHandler(uint8_t _maxCS) //Constructor for setting values
-          : maxCS(_maxCS) {}
+    Timer recheckReadingTimer; //Declaring the instance for later initalization in constructor and use
 
-  void resetThermocouple(){
-    digitalWrite(maxCS, LOW);  // Select the MAX31856 via chip select
-    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE1)); //I SPENT AGES FINDING THIS! :-D
-    SPI.transfer(0x0F);  // Write address (0x0F) with write command
-    SPI.transfer(0x00);  // Write any byte to the register to clear the fault
-    SPI.endTransaction();
-    digitalWrite(maxCS, HIGH);  // Deselect the MAX31856 via chip select
-  }
+  public:
+    Max31856FaultHandler(uint8_t _maxCS) //Constructor for setting values
+            : maxCS(_maxCS), recheckReadingTimer(sensorMeasurementTime, true) {} //Initializing the instance in the constructor
 
-  bool handlePotentialFault(float temperature_reading)
-  {
-    if(recheck_reading_timer.timed_out())
+    void resetThermocouple(){
+      digitalWrite(maxCS, LOW);  // Select the MAX31856 via chip select
+      SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE1)); //I SPENT AGES FINDING THIS! :-D
+      SPI.transfer(0x0F);  // Write address (0x0F) with write command
+      SPI.transfer(0x00);  // Write any byte to the register to clear the fault
+      SPI.endTransaction();
+      digitalWrite(maxCS, HIGH);  // Deselect the MAX31856 via chip select
+    }
+
+    FailStates handlePotentialFault(float temperatureReading)
     {
-      temperatureNew = temperature_reading;
-      if(((!isnan(temperatureReference)) && (temperatureNew == temperatureReference)) || isnan(temperatureNew))
+      if (recheckReadingTimer.timedOut())
       {
-        resetThermocouple();
-        if(override_update_fail)
-        {
-          override_update_fail = false;
-          return true; //Let's see if the error is still there next time
-        }
-        override_update_fail = true //Ready for a new chance?
-        failCount += 1; //Error not cleared
+          temperatureNew = temperatureReading;
+          recheckReadingTimer.resetTimer();
+
+          bool faultDetected = (!isnan(temperatureReference) && temperatureNew == temperatureReference) || isnan(temperatureNew);
+
+          if (faultDetected)
+          {
+              resetThermocouple();
+
+              if (overrideUpdateFail)
+              {
+                  overrideUpdateFail = false;
+                  return FailStates::Unknown; // Instead of returning true, return a FailState
+              }
+
+              overrideUpdateFail = true;
+              failCount++;
+          }
+          else
+          {
+              failCount = 0;
+          }
+
+          temperatureReference = temperatureNew;
+      }
+
+      if (failCount >= maxFailAttempts)
+      {
+          return FailStates::Unsuccessful; // Failed permanently
+      }
+      else if (failCount > 0)
+      {
+          return FailStates::Unknown; // We do not yet know if the sensor failed permanently
       }
       else
       {
-        failCount = 0;
-      }
-
-      temperatureReference = temperatureNew;
-
-      if(failCount >= maxFailAttempts)
-      {
-        return false;
-      }
-      else
-      {
-        return true;
+          return FailStates::Successful; // No fail yet
       }
     }
-  }
+
+};
+
+class OvenOverheatWatchdog
+{
+  private:
+    float maxTemp;
+  
+  public:
+    bool ovenOverheat;
+
+    OvenOverheatWatchdog(float _maxTemp)
+        : maxTemp(_maxTemp)
+        {}
+
+    void check_overheat(float currentTemperature, bool temperatureSensorFailAlarm)
+    {
+      //If temperatureSensorFailAlarm is on, the high temperature of 2023 degrees (Labview sensor fail standard) is because of thermocouple fail, not overheat
+      //We can't know if there's overheat if the sensor isn't working anyway, and no thermocouples can measure 2023 degrees or higher
+      if((currentTemperature >= maxTemp) && !temperatureSensorFailAlarm)
+      {
+        ovenOverheat = true;
+      }
+    }
+};
+
+class SrLatchFrozenWatchdog
+{
+  //This class checks for high pulses after inversion from low by a NOT gate
+  private:
+    unsigned long srLatchHighDurationMs; //Maximum tolerated high duration
+    int srLatchResetPin;
+    int srLatchOutputPin;
+  
+    Timer srLatchHighTimer;
+  
+    bool resetSrLatch = true;
+  
+    bool srLatchOutputStatus;
+  
+    int failCount = 0;
+    int maxFailAttempts = 3;
+
+  public:
+    bool srLatchFrozen = false;
+
+    SrLatchFrozenWatchdog(unsigned long _srLatchHighDurationMs, int _srLatchResetPin, int _srLatchOutputPin)
+          : srLatchHighDurationMs(_srLatchHighDurationMs), srLatchResetPin(_srLatchResetPin), srLatchOutputPin(_srLatchOutputPin), srLatchHighTimer(_srLatchHighDurationMs)
+        {}
+
+    void checkSrLatchFrozen()
+    {
+      if(resetSrLatch)
+      {
+        digitalWrite(srLatchResetPin, HIGH); //Latch will go to low, and will go to high again if it's set pin is set to high (pulsed) by external signal
+      }
+
+      //Pulsed high, everything in order
+      srLatchOutputStatus = digitalRead(srLatchOutputPin);
+      if(srLatchOutputStatus == true)
+      {
+        srLatchHighTimer.resetTimer();
+        resetSrLatch = true;
+        return;
+      }
+
+      if(!srLatchHighTimer.timedOut())
+      {
+        //Keep giving a chance ready for next time
+        resetSrLatch = false;
+        return;
+      }
+
+      //At this stage, the SR latch has not gone to high
+      resetSrLatch = true;
+      failCount += 1;
+
+      if(!failCount >= maxFailAttempts)
+      {
+        return;
+      }
+      else
+      {
+        //Watchdog barks
+        srLatchFrozen = true;
+      }
+    }
+
+};
+
+struct Watchdog
+{
+  private:
+    OvenOverheatWatchdog* ovenOverheatWatchdog;
+    SrLatchFrozenWatchdog* srLatchFrozenWatchdog;
+
+  //General watchdog module interface kennel for other watchdogs
+  public:
+    Watchdog(bool _useOvenOverheatWatchdog = false,
+      bool _useSrLatchFrozenWatchdog = false,
+      float _maxTemp = NAN,
+      unsigned long _srLatchHighDurationMs = 4294967295, //Absolute max as NAN equivalent, value will never be this high
+      int _srLatchResetPin = NAN,
+      int _srLatchOutputPin = NAN)
+          : ovenOverheatWatchdog(nullptr), //Initialize the object pointers, so the actual object can be initialized if in use
+            srLatchFrozenWatchdog(nullptr)
+        {
+          if(_useOvenOverheatWatchdog)
+          {
+            ovenOverheatWatchdog = new OvenOverheatWatchdog(_maxTemp);
+          }
+          if(_useSrLatchFrozenWatchdog)
+          {
+            srLatchFrozenWatchdog = new SrLatchFrozenWatchdog(_srLatchHighDurationMs, _srLatchResetPin, _srLatchOutputPin);
+          }
+        }
 };
 
 //Oven status and settings
-typedef struct Oven
+struct Oven
 {
   //args: max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
 
@@ -143,7 +278,7 @@ typedef struct Oven
   bool heatingOn;
   float currentTemp;
 
-  bool temperature_sensor_fail_alarm = false;
+  bool temperatureSensorFailAlarm = false;
 
   //Settings
   const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
@@ -155,31 +290,57 @@ typedef struct Oven
 
 
   Oven(uint8_t _maxCS, int _heatingElement, float _tempGoal, float _absoluteMaxTemp, bool _heatingOverride = false, bool _useHeatingSimulation = false, uint8_t _tcType = 3) //Constructor for setting values
-          : maxSensor(_maxCS), heatingElement(_heatingElement), tempGoal(_tempGoal), absoluteMaxTemp(_absoluteMaxTemp), heatingOverride(_heatingOverride), useHeatingSimulation(_useHeatingSimulation), tcType(_tcType) //Allready existing maxSensor object is set and initialized with the value of _maxCS
-          {max31856FaultHandler = Max31856FaultHandler(_maxCS);}
+          : maxSensor(_maxCS), //Allready existing maxSensor object is set and initialized with the pin number value of _maxCS
+            max31856FaultHandler(_maxCS),
+            heatingElement(_heatingElement), 
+            tempGoal(_tempGoal), absoluteMaxTemp(_absoluteMaxTemp), 
+            heatingOverride(_heatingOverride), 
+            useHeatingSimulation(_useHeatingSimulation), 
+            tcType(_tcType)
+          {}
 
   void begin()
   {
-    if !(maxSensor.begin() && maxSensor.isConnected() && maxSensor.setThermocoupleType(tcType);) //True if sensor initialization was successful, it's connected, and the thermocouple type was correct
+    bool sensorBeginSuccess = maxSensor.begin();
+    bool sensorNoOtherFaults = !maxSensor.readFault();
+    bool sensorInitializationSuccess = sensorBeginSuccess && sensorNoOtherFaults;
+
+    if (!sensorInitializationSuccess) //True if sensor initialization was successful, it's connected, and the couple type was correct
     {
-      temperature_sensor_fail_alarm = true;
+      temperatureSensorFailAlarm = true;
+      currentTemp = 2023; //Labview standard thermocouple error temperature, as per request from Terje
     }
     
     pinMode(heatingElement, OUTPUT);
     digitalWrite(heatingElement, LOW);
   }
 
-  float read_temperature()
+  void readTemperature()
   {
-    currentTemp = maxSensor.readThermocoupleTemperature();
-    temperature_sensor_fail_alarm = max31856FaultHandler.handlePotentialFault(currentTemp); //Alarm goes on if sensor is confirmed failed.
+    if (temperatureSensorFailAlarm == false)
+    {
+      float currentTempReference = maxSensor.readThermocoupleTemperature();
+      FailStates temperatureSensorFailStatus = max31856FaultHandler.handlePotentialFault(currentTempReference); //Alarm goes on if sensor is confirmed failed.
+      if(temperatureSensorFailStatus == FailStates::Successful)
+      {
+        currentTemp = currentTempReference;
+      }
+      else if(temperatureSensorFailStatus == FailStates::Unsuccessful)
+      {
+        currentTemp = 2023;
+        temperatureSensorFailAlarm = true;
+      }
+
+      //If unknown, don't update
+    }
   }
+
 
   //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, tc type etc (see "signals" in the documentation)
 };
 
 //Simulation status and settings, not important for the system, and can optionally be ignored
-typedef struct SimulationData
+struct SimulationData
 {
   //Args: All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
 
@@ -206,13 +367,13 @@ typedef struct SimulationData
 };
 
 //Sorry about these being global, they should all be in SerialMessageHandler, StringMessageHandler, or in header files
-typedef struct MessageStruct
+struct MessageStruct
 {
   char category; //Categories enforce structure
   char message;
 };
 
-typedef struct ParsedMessageStruct
+struct ParsedMessageStruct
 {
   //Category and message combines into instruction with MessageStruct
   MessageStruct *message;
@@ -332,17 +493,17 @@ class StringMessageHandler
       String buildtMessage = "";
       // Append category
       buildtMessage += String(message.category);
-      buildtMessage += message_part_separator;
+      buildtMessage += messagePartSeparator;
       // Append message
       buildtMessage += String(message.message);
-      buildtMessage += message_part_separator;
+      buildtMessage += messagePartSeparator;
       // Append value with two decimal places or "NaN" if not a number
       if (isnan(value)) {
           buildtMessage += "NaN";
       } else {
           buildtMessage += String(value, 2); // 2 decimal places
       }
-      buildtMessage += message_part_separator;
+      buildtMessage += messagePartSeparator;
       // Append timestamp
       if (timestamp == ""){
         buildtMessage += "NaN";
@@ -361,7 +522,7 @@ class StringMessageHandler
         int commaIndexesLength = sizeof(commaIndexes)/sizeof(*commaIndexes);
 
         for(int i = 0; i < commaIndexesLength; i++){
-          commaIndex = message.indexOf(message_part_separator, commaIndex + 1);
+          commaIndex = message.indexOf(messagePartSeparator, commaIndex + 1);
           if (commaIndex >= 0 && commaIndex < message.length()){ //Avoid out of bounds
             commaIndexes[i] = commaIndex;
           }
@@ -421,7 +582,7 @@ class StringMessageHandler
     ~StringMessageHandler() { //(singleton implementation, I just copy-paste)
     }
 
-    char message_part_separator = ',';
+    char messagePartSeparator = ',';
 
     const MessageStruct* findMessage(char category, char message){
       for(size_t i = 0; i < Messages::NUM_MESSAGES; ++i){
@@ -633,8 +794,8 @@ void loop() {
     //Why isn't the oven1SimulationData instanciated inside the oven1 object like everything else!!! It could always be changed again to be passed as a parameter if it uses too many resources.
     oven1.currentTemp = tempSimulation(oven1.heatingOn, oven1.currentTemp, oven1SimulationData);
   } else {
-    if(!oven1.temperature_sensor_fail_alarm){
-      oven1.currentTemp = oven1.read_temperature(); 
+    if(!oven1.temperatureSensorFailAlarm){
+      oven1.readTemperature();
     }
   }
 
@@ -658,7 +819,8 @@ void loop() {
     }
   }
 
-  Serial.println(oven1.currentTemp);
+  serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1.currentTemp);
+  Serial.println(oven1.temperatureSensorFailAlarm);
   Serial.println("Der!");
 
   // Serial.println(oven1.currentTemp);

@@ -43,6 +43,7 @@ To clean up resources and shut down gracefully, Labview will need to call a Pyth
 If first-time serial setup fails for whatever reason, the interface refuses to move on until successful connection.\par
 Data sent between the interface and controller as strings consists of "message type value,message value for type (these two make up the total message),optional value,optional time stamp". Parts are separated by the comma delimiters.\par
 I found pyserial was the easiest and most robust library for serial communication, but it's still unstable, like not doing automatic serial reconnects. My communication module solves that, as well as building an easy to use and hopefully efficient protocol around controller-interface communication. I kept it asynchronous and in real-time using Python's asyncio.\par
+The furnace might still heat up quite a lot after the set max temperature is reached and the heat is turned off. The technician needs to know this overshoot and set max temperature well below it's characteristic absolute max. \par
 \par
 Imporvements:\par
 The Arduino is currently only a watchdog module. Suggestions for signals for a PID controller is in the signals documentation, and a lot of the code in both Python and Arduino C++ can be reused. If the PC told the Arduino what mode (or even modes) it should be in or opposite, the same Arduino can be used for both without needing to re-upload to the Arduino. The user can decide any time.\par
@@ -55,6 +56,8 @@ Instead of using timestamps for commands sent from the Arduino as ecorded from t
 Store the furnace signal pin and PID controller/watchdog module modes set by the user in persistent memory on the Arduino like the EPROM instead of on the user's computer. No need to pass JSON files around. Keep sending them over serial during setup and check Arduino-side if it's changed. The user will not need to specify them every time when using the GUI. Send NaN for no update.\par
 The user can change the pin values while the Arduino is running. Only the absolute max temperature, and goal temperature in PID mode that's not implemented should be changed.\par
 Currently, status updates and user messages are only sent to a GUI. For Labview to interface with the program, it will be necessary with a place Labview can access them too. Sending to a universally accessible storage can allow both the GUI and Labview to read them. Just make shure problems don't occur if they both access it at the same time, like by using an asynchronous queue.\par
+The system is currently limited to thermocouples, but there's also furnaces use PT-100 elements.\par
+It is detectable if the SR latch external input signal is frozen high by very quickly dropping it to low once every two seconds. If it was quickly set to high when it's meant to off in the same way, the Arduino can know if it's frozen low as well. This is probably not necessary.\par
 \par
 HEY. TALK TO TERJE AND BEHZAD ABOUT ALWAYS HAVING TO USE SOME OVER TEMPERATURE PROTECTION ON THE OVEN ITSELF. IT COULD BE SAFER, BUT ALSO BE MORE IMPRACTICAL.\par
 }
