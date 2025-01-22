@@ -234,70 +234,21 @@ class SrLatchFrozenWatchdog
 
 };
 
-struct Watchdog
+class Max31856Sensor
 {
-  private:
-    OvenOverheatWatchdog* ovenOverheatWatchdog;
-    SrLatchFrozenWatchdog* srLatchFrozenWatchdog;
-
-  //General watchdog module interface kennel for other watchdogs
-  public:
-    Watchdog(bool _useOvenOverheatWatchdog = false,
-      bool _useSrLatchFrozenWatchdog = false,
-      float _maxTemp = NAN,
-      unsigned long _srLatchHighDurationMs = 4294967295, //Absolute max as NAN equivalent, value will never be this high
-      int _srLatchResetPin = NAN,
-      int _srLatchOutputPin = NAN)
-          : ovenOverheatWatchdog(nullptr), //Initialize the object pointers, so the actual object can be initialized if in use
-            srLatchFrozenWatchdog(nullptr)
-        {
-          if(_useOvenOverheatWatchdog)
-          {
-            ovenOverheatWatchdog = new OvenOverheatWatchdog(_maxTemp);
-          }
-          if(_useSrLatchFrozenWatchdog)
-          {
-            srLatchFrozenWatchdog = new SrLatchFrozenWatchdog(_srLatchHighDurationMs, _srLatchResetPin, _srLatchOutputPin);
-          }
-        }
-
-    //Maybe make methods to call the two watchdog's methods, and implement direct access to their variables from here too.
-};
-
-//Oven status and settings
-struct Oven
-{
-  //args: max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
-
-  //Simulation, heating override, etc adjustable for each individual oven if relevant
-  
-  const int heatingElement; //Oven controll pin
+  //args: max31856 CS designated pin for Chip Select (int), optional thermocouple type (int)
 
   const Adafruit_MAX31856 maxSensor;
 
   const uint8_t tcType; //Thermocouple type, see Max31856 library examples
 
-  bool heatingOn;
-  float currentTemp;
-
   bool temperatureSensorFailAlarm = false;
-
-  //Settings
-  const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
-  const bool useHeatingSimulation; //Ignore thermo sensor and fake temperature from controlled heating algorithm
-  float tempGoal; //Degrees
-  float absoluteMaxTemp;
 
   Max31856FaultHandler max31856FaultHandler;
 
-
-  Oven(uint8_t _maxCS, int _heatingElement, float _tempGoal, float _absoluteMaxTemp, bool _heatingOverride = false, bool _useHeatingSimulation = false, uint8_t _tcType = 3) //Constructor for setting values
+  Oven(uint8_t _maxCS, uint8_t _tcType = 3) //Constructor for setting values
           : maxSensor(_maxCS), //Allready existing maxSensor object is set and initialized with the pin number value of _maxCS
             max31856FaultHandler(_maxCS),
-            heatingElement(_heatingElement), 
-            tempGoal(_tempGoal), absoluteMaxTemp(_absoluteMaxTemp), 
-            heatingOverride(_heatingOverride), 
-            useHeatingSimulation(_useHeatingSimulation), 
             tcType(_tcType)
           {}
 
@@ -312,9 +263,6 @@ struct Oven
       temperatureSensorFailAlarm = true;
       currentTemp = 2023; //Labview standard thermocouple error temperature, as per request from Terje
     }
-    
-    pinMode(heatingElement, OUTPUT);
-    digitalWrite(heatingElement, LOW);
   }
 
   void readTemperature()
@@ -338,7 +286,43 @@ struct Oven
   }
 
 
-  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, tc type etc (see "signals" in the documentation)
+  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like max temperature, tc type etc (see "signals" in the documentation)
+}
+
+//Oven status and settings
+struct Oven
+{
+  //args: heating element oven controll pin (int), goal temoperature for furnace (float), absolute max temperature for furnace (float) force oven to stay off? (bool), use the heating simulation? (bool)
+
+  //Simulation, heating override, etc adjustable for each individual oven if relevant
+  
+  const int heatingElementPin; //Oven controll pin
+
+  bool heatingOn;
+  float currentTemp;
+
+  //Settings
+  const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
+  const bool useHeatingSimulation; //Ignore thermo sensor and fake temperature from controlled heating algorithm
+  float tempGoal; //Degrees
+  float absoluteMaxTemp;
+
+
+  Oven(int _heatingElementPin, float _tempGoal, float _absoluteMaxTemp, bool _heatingOverride = false, bool _useHeatingSimulation = false) //Constructor for setting values
+          : heatingElementPin(_heatingElementPin), 
+            tempGoal(_tempGoal),
+            absoluteMaxTemp(_absoluteMaxTemp), 
+            heatingOverride(_heatingOverride), 
+            useHeatingSimulation(_useHeatingSimulation)
+          {}
+
+  void begin()
+  {
+    pinMode(heatingElement, OUTPUT);
+    digitalWrite(heatingElement, LOW);
+  }
+
+  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, etc (see "signals" in the documentation)
 };
 
 //Simulation status and settings, not important for the system, and can optionally be ignored
@@ -428,12 +412,28 @@ namespace MessageTimeouts {
 
 class SerialHandshakeHandler
 {
+  private:
+    unsigned long pingReceivedTimeout = 15 * 1000;
+    Timer pingReceivedTimer;
+
   public:
-    static bool checkHandshake(const ParsedMessageStruct *message) {
+    SerialHandshakeHandler()
+      : pingReceivedTimer(pingReceivedTimeout)
+    {}
+
+    void handleHandshake(const ParsedMessageStruct *message) {
       if(message->message == &Messages::PING_PC_ARDUINO)
-        return true;
-      else {
-        return false;
+      {
+        serialConnectionManager.serialConnection = true;
+        pingReceivedTimer.resetTimer()
+        serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
+      }
+      else
+      {
+        if(pingReceivedTimer.timedOut())
+        {
+          serialConnectionManager.serialConnection = true;
+        }
       }
     }
 
@@ -445,12 +445,16 @@ class SerialHandshakeHandler
     // Private constructor to prevent instantiation
     SerialHandshakeHandler() = default;
     ~SerialHandshakeHandler() = default;
+
+    SerialConnectionManager &serialConnectionManager::getInstance();
+    SerialMessageHandler &serialMessageHandler::getInstance();
 };
 
 class SerialConnectionManager{
 
   public:
-    bool serialLoss = true;
+    bool serialConnection = false; //While serialConnection is known connection at the moment...
+    // bool serialLost = false; //...serialLoss indicates going from connected to disconnected.
 
     void begin(unsigned long baudRate = 9600){
       Serial.begin(baudRate);
@@ -720,9 +724,11 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 
   return simulationData.currentTemp;
 }
+//max31856 CS designated pin for Chip Select (int), optional thermocouple type (int)
+Max31856Sensor temperatureSensor1(10);
 
-//max31856 CS designated pin for Chip Select (int), heating element oven controll pin (int), force oven to stay off? (bool), use the heating simulation? (bool), optional thermocouple type (int)
-Oven oven1(10, 5, 30, 50, false, false);
+//heating element oven controll pin (int), goal temperature for furnace (float), absolute max temperature (float), force oven to stay off? (bool), use the heating simulation? (bool)
+Oven oven1(5, 30, 50, false, false);
 
 //All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
 SimulationData oven1SimulationData (devDelay / 1000);
@@ -774,7 +780,7 @@ void loop() {
 
   // //Get all of this, including whatever in the global scope they use, into their structs or classes, in batch
   // if(SerialHandshakeHandler::checkHandshake(message)){
-    serialConnectionManager.serialLoss = false;
+    serialConnectionManager.serialLost = false;
   //   serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
   //   lastSerialPingTime = currentTime;
   // }
@@ -797,7 +803,7 @@ void loop() {
     oven1.currentTemp = tempSimulation(oven1.heatingOn, oven1.currentTemp, oven1SimulationData);
   } else {
     if(!oven1.temperatureSensorFailAlarm){
-      oven1.readTemperature();
+      oven1.currentTemp = temperatureSensor1.read_temperature();
     }
   }
 
@@ -822,7 +828,7 @@ void loop() {
   }
 
   serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1.currentTemp);
-  Serial.println(oven1.temperatureSensorFailAlarm);
+  Serial.println(temperatureSensor1.temperatureSensorFailAlarm);
   Serial.println("Der!");
 
   // Serial.println(oven1.currentTemp);
