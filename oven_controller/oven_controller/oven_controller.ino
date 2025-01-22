@@ -92,7 +92,7 @@ class Max31856FaultHandler
     Max31856FaultHandler(uint8_t _maxCS) //Constructor for setting values
             : maxCS(_maxCS), recheckReadingTimer(sensorMeasurementTime, true) {} //Initializing the instance in the constructor
 
-    void resetThermocouple(){
+    void resetThermosensor(){
       digitalWrite(maxCS, LOW);  // Select the MAX31856 via chip select
       SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE1)); //I SPENT AGES FINDING THIS! :-D
       SPI.transfer(0x0F);  // Write address (0x0F) with write command
@@ -112,7 +112,7 @@ class Max31856FaultHandler
 
           if (faultDetected)
           {
-              resetThermocouple();
+              resetThermosensor();
 
               if (overrideUpdateFail)
               {
@@ -162,7 +162,7 @@ class OvenOverheatWatchdog
     void check_overheat(float currentTemperature, bool temperatureSensorFailAlarm)
     {
       //If temperatureSensorFailAlarm is on, the high temperature of 2023 degrees (Labview sensor fail standard) is because of thermocouple fail, not overheat
-      //We can't know if there's overheat if the sensor isn't working anyway, and no thermocouples can measure 2023 degrees or higher
+      //We can't know if there's overheat if the sensor isn't working anyway, and no thermocouples or thermosensors can measure 2023 degrees or higher
       if((currentTemperature >= maxTemp) && !temperatureSensorFailAlarm)
       {
         ovenOverheat = true;
@@ -174,11 +174,11 @@ class SrLatchFrozenWatchdog
 {
   //This class checks for high pulses after inversion from low by a NOT gate
   private:
-    unsigned long srLatchHighDurationMs; //Maximum tolerated high duration
+    unsigned long srLatchLowDurationMs; //Maximum expected low duration
     int srLatchResetPin;
     int srLatchOutputPin;
   
-    Timer srLatchHighTimer;
+    Timer srLatchLowTimer;
   
     bool resetSrLatch = true;
   
@@ -190,9 +190,15 @@ class SrLatchFrozenWatchdog
   public:
     bool srLatchFrozen = false;
 
-    SrLatchFrozenWatchdog(unsigned long _srLatchHighDurationMs, int _srLatchResetPin, int _srLatchOutputPin)
-          : srLatchHighDurationMs(_srLatchHighDurationMs), srLatchResetPin(_srLatchResetPin), srLatchOutputPin(_srLatchOutputPin), srLatchHighTimer(_srLatchHighDurationMs)
+    SrLatchFrozenWatchdog(unsigned long _srLatchLowDurationMs, int _srLatchResetPin, int _srLatchOutputPin)
+          : srLatchLowDurationMs(_srLatchLowDurationMs), srLatchResetPin(_srLatchResetPin), srLatchOutputPin(_srLatchOutputPin), srLatchLowTimer(_srLatchLowDurationMs)
         {}
+
+    void begin()
+    {
+      pinMode(srLatchResetPin, OUTPUT);
+      pinMode(srLatchOutputPin, OUTPUT);
+    }
 
     void checkSrLatchFrozen()
     {
@@ -205,12 +211,12 @@ class SrLatchFrozenWatchdog
       srLatchOutputStatus = digitalRead(srLatchOutputPin);
       if(srLatchOutputStatus == true)
       {
-        srLatchHighTimer.resetTimer();
+        srLatchLowTimer.resetTimer();
         resetSrLatch = true;
         return;
       }
 
-      if(!srLatchHighTimer.timedOut())
+      if(!srLatchLowTimer.timedOut())
       {
         //Keep giving a chance ready for next time
         resetSrLatch = false;
@@ -238,91 +244,116 @@ class Max31856Sensor
 {
   //args: max31856 CS designated pin for Chip Select (int), optional thermocouple type (int)
 
-  const Adafruit_MAX31856 maxSensor;
+  private:
+    const Adafruit_MAX31856 maxSensor;
 
-  const uint8_t tcType; //Thermocouple type, see Max31856 library examples
+    const uint8_t tcType; //Thermocouple type, see Max31856 library examples
 
-  bool temperatureSensorFailAlarm = false;
+    Max31856FaultHandler max31856FaultHandler;
 
-  Max31856FaultHandler max31856FaultHandler;
+  public:
+    bool temperatureSensorFailAlarm = false;
 
-  Oven(uint8_t _maxCS, uint8_t _tcType = 3) //Constructor for setting values
-          : maxSensor(_maxCS), //Allready existing maxSensor object is set and initialized with the pin number value of _maxCS
-            max31856FaultHandler(_maxCS),
-            tcType(_tcType)
-          {}
+    Max31856Sensor(uint8_t _maxCS, uint8_t _tcType = 3) //Constructor for setting values
+            : maxSensor(_maxCS), //Allready existing maxSensor object is set and initialized with the pin number value of _maxCS
+              max31856FaultHandler(_maxCS),
+              tcType(_tcType)
+            {}
 
-  void begin()
-  {
-    bool sensorBeginSuccess = maxSensor.begin();
-    bool sensorNoOtherFaults = !maxSensor.readFault();
-    bool sensorInitializationSuccess = sensorBeginSuccess && sensorNoOtherFaults;
-
-    if (!sensorInitializationSuccess) //True if sensor initialization was successful, it's connected, and the couple type was correct
+    void begin()
     {
-      temperatureSensorFailAlarm = true;
-      currentTemp = 2023; //Labview standard thermocouple error temperature, as per request from Terje
-    }
-  }
+      bool sensorBeginSuccess = maxSensor.begin();
+      bool sensorNoOtherFaults = !maxSensor.readFault();
+      bool sensorInitializationSuccess = sensorBeginSuccess && sensorNoOtherFaults;
 
-  void readTemperature()
-  {
-    if (temperatureSensorFailAlarm == false)
-    {
-      float currentTempReference = maxSensor.readThermocoupleTemperature();
-      FailStates temperatureSensorFailStatus = max31856FaultHandler.handlePotentialFault(currentTempReference); //Alarm goes on if sensor is confirmed failed.
-      if(temperatureSensorFailStatus == FailStates::Successful)
+      if (!sensorInitializationSuccess) //True if sensor initialization was successful, it's connected, and the couple type was correct
       {
-        currentTemp = currentTempReference;
-      }
-      else if(temperatureSensorFailStatus == FailStates::Unsuccessful)
-      {
-        currentTemp = 2023;
         temperatureSensorFailAlarm = true;
       }
-
-      //If unknown, don't update
     }
-  }
+
+    float readTemperature()
+    {
+      float currentTemp;
+
+      if (temperatureSensorFailAlarm == false)
+      {
+        float currentTempReference = maxSensor.readThermocoupleTemperature();
+        FailStates temperatureSensorFailStatus = max31856FaultHandler.handlePotentialFault(currentTempReference); //Alarm goes on if sensor is confirmed failed.
+
+        if(temperatureSensorFailStatus == FailStates::Successful)
+        {
+          currentTemp = currentTempReference;
+        }
+        else if(temperatureSensorFailStatus == FailStates::Unsuccessful)
+        {
+          currentTemp = 2023;
+          temperatureSensorFailAlarm = true;
+        }
+
+        //If unknown, don't update
+        
+        return currentTemp;
+      }
+
+      else
+      {
+        return 2023.f; //Labview standard thermosensor error temperature, as per request from Terje
+      }
+
+    }
 
 
   //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like max temperature, tc type etc (see "signals" in the documentation)
-}
+};
 
 //Oven status and settings
 struct Oven
 {
-  //args: heating element oven controll pin (int), goal temoperature for furnace (float), absolute max temperature for furnace (float) force oven to stay off? (bool), use the heating simulation? (bool)
+  //args: Oven SSR pin (int), absolute max temperature for oven (float), goal temoperature for oven (float), force oven to stay off? (bool), use the heating simulation? (bool)
 
   //Simulation, heating override, etc adjustable for each individual oven if relevant
   
-  const int heatingElementPin; //Oven controll pin
+  private:
+    const int ovenControllPin; //Oven SSR pin
 
-  bool heatingOn;
-  float currentTemp;
+    //Settings
+    const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
+    const bool useHeatingSimulation; //Ignore thermo sensor and fake temperature from controlled heating algorithm
 
-  //Settings
-  const bool heatingOverride; //Force actual heater to be off? Won't effect anything else.
-  const bool useHeatingSimulation; //Ignore thermo sensor and fake temperature from controlled heating algorithm
-  float tempGoal; //Degrees
-  float absoluteMaxTemp;
-
-
-  Oven(int _heatingElementPin, float _tempGoal, float _absoluteMaxTemp, bool _heatingOverride = false, bool _useHeatingSimulation = false) //Constructor for setting values
-          : heatingElementPin(_heatingElementPin), 
-            tempGoal(_tempGoal),
-            absoluteMaxTemp(_absoluteMaxTemp), 
-            heatingOverride(_heatingOverride), 
-            useHeatingSimulation(_useHeatingSimulation)
-          {}
-
-  void begin()
-  {
-    pinMode(heatingElement, OUTPUT);
-    digitalWrite(heatingElement, LOW);
-  }
-
-  //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, etc (see "signals" in the documentation)
+  public:
+    bool heatingOn;
+    float currentTemp;
+  
+    //Settings
+    float tempGoal; //Degrees
+    float absoluteMaxTemp;
+  
+  
+    Oven(int _ovenControllPin, float _absoluteMaxTemp, float _tempGoal = NAN, bool _heatingOverride = false, bool _useHeatingSimulation = false) //Constructor for setting values
+            : ovenControllPin(_ovenControllPin), 
+              tempGoal(_tempGoal),
+              absoluteMaxTemp(_absoluteMaxTemp), 
+              heatingOverride(_heatingOverride), 
+              useHeatingSimulation(_useHeatingSimulation)
+            {}
+  
+    void begin()
+    {
+      pinMode(ovenControllPin, OUTPUT);
+    }
+  
+    void turnOvenControllPinOn()
+    {
+      digitalWrite(ovenControllPin, HIGH);
+    }
+  
+    void turnOvenControllPinOff()
+    {
+      digitalWrite(ovenControllPin, LOW);
+    }
+  
+    //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, etc (see "signals" in the documentation)
 };
 
 //Simulation status and settings, not important for the system, and can optionally be ignored
@@ -331,7 +362,7 @@ struct SimulationData
   //Args: All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
 
   //inputs
-  float currentTemp = 23; //Tcurrent, current temperature (currentTemp)
+  float currentTemp = NAN; //Tcurrent, current temperature (currentTemp)
   bool heatingOn; //heatingOn is not used in the equation directly
   bool lastHeatingState; //Used to check state changes
 
@@ -344,7 +375,7 @@ struct SimulationData
   const float elementCooldownTime; //Toff, time element takes to cool off again in seconds
   const float actualWattage; //Pactual(t) element heat production wattage per now (NOT NEEDED)
   const float wattage; //P, element power wattage rating CHECK
-  const float heatCapacity; //C, furnace heat capacity in joules per degree celsius
+  const float heatCapacity; //C, oven heat capacity in joules per degree celsius
   const float lossCoefficient; //h, heat loss to environment per degree difference
   const float ambientTemperature; //Tenv, the room temperature
 
@@ -352,7 +383,6 @@ struct SimulationData
                 : wattage(_wattage), elementBuildupTime(_elementBuildupTime), elementCooldownTime(_elementCooldownTime), heatCapacity(_heatCapacity), lossCoefficient(_lossCoefficient), ambientTemperature(_ambientTemperature), timeStep(_timeStep){}
 };
 
-//Sorry about these being global, they should all be in SerialMessageHandler, StringMessageHandler, or in header files
 struct MessageStruct
 {
   char category; //Categories enforce structure
@@ -365,6 +395,8 @@ struct ParsedMessageStruct
   MessageStruct *message;
   float value;
   String timestamp;
+  // Indicate whether the parsed message is valid
+  bool isValid;
 };
 
 namespace Messages{
@@ -378,9 +410,9 @@ namespace Messages{
   static const MessageStruct FORCE_EMERGENCY_STOP = {'4', '0'}; //Received from PC
 
   static const MessageStruct EMERGENCY_ALARM = {'9', '0'}; //Sent to PC
-  static const MessageStruct THERMOCOUPLE_ERROR = {'9', '1'}; //Sent to PC
-  static const MessageStruct WATCHDOG_SR_LATCH_FROZEN_HIGH = {'9', '2'}; //Sent to PC. The furnace heating signal is stuck to high.
-  static const MessageStruct FURNACE_OVERHEAT = {'2', '1'}; //Sent to PC
+  static const MessageStruct THERMOSENSOR_ERROR = {'9', '1'}; //Sent to PC
+  static const MessageStruct WATCHDOG_SR_LATCH_FROZEN = {'9', '2'}; //Sent to PC. The oven heating signal is stuck to high.
+  static const MessageStruct OVEN_OVERHEAT = {'2', '1'}; //Sent to PC
 
   //Allows iteration by using pointers to Messages' memory addresses, unlike iterating over their structs directly
   const MessageStruct* messagePointers[] = {
@@ -389,66 +421,26 @@ namespace Messages{
     &Messages::TEMPERATURE_READING,
     &Messages::FORCE_EMERGENCY_STOP,
     &Messages::EMERGENCY_ALARM,
-    &Messages::THERMOCOUPLE_ERROR,
-    &Messages::WATCHDOG_SR_LATCH_FROZEN_HIGH,
-    &Messages::FURNACE_OVERHEAT
+    &Messages::THERMOSENSOR_ERROR,
+    &Messages::WATCHDOG_SR_LATCH_FROZEN,
+    &Messages::OVEN_OVERHEAT
   };
 
   static constexpr size_t NUM_MESSAGES = sizeof(messagePointers) / sizeof(messagePointers[0]); //size calculations are platform independent unlike integers, size_t bridges the gap
 };
 
 
-//Timeout durations for sending any outgoing messages to avoid overcrowding the serial buffer.
+//Timeout durations for sending any outgoing messages to avoid overcrowding the serial buffer
 namespace MessageTimeouts {
   // Instantiate Timer for each message with specific timeout durations
   //What about PING_ARDUINO_PC_TIMER? It has no timeout since it responds once on ping from PC.
   //FORCE_EMERGENCY_STOP is sent from Python on the computer, so the timeout is handled there
   static Timer TEMPERATURE_READING(1500, true); //Milliseconds
   static Timer EMERGENCY_ALARM(1000, true); //Milliseconds
-  static Timer THERMOCOUPLE_ERROR(1000, true); //Milliseconds
-  static Timer WATCHDOG_SR_LATCH_FROZEN_HIGH(1000, true); //Milliseconds
-  static Timer FURNACE_OVERHEAT(1000, true); //Milliseconds
+  static Timer THERMOSENSOR_ERROR(1000, true); //Milliseconds
+  static Timer WATCHDOG_SR_LATCH_FROZEN(1000, true); //Milliseconds
+  static Timer OVEN_OVERHEAT(1000, true); //Milliseconds
 }
-
-class SerialHandshakeHandler
-{
-  private:
-    unsigned long pingReceivedTimeout = 15 * 1000;
-    Timer pingReceivedTimer;
-
-  public:
-    SerialHandshakeHandler()
-      : pingReceivedTimer(pingReceivedTimeout)
-    {}
-
-    void handleHandshake(const ParsedMessageStruct *message) {
-      if(message->message == &Messages::PING_PC_ARDUINO)
-      {
-        serialConnectionManager.serialConnection = true;
-        pingReceivedTimer.resetTimer()
-        serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
-      }
-      else
-      {
-        if(pingReceivedTimer.timedOut())
-        {
-          serialConnectionManager.serialConnection = true;
-        }
-      }
-    }
-
-    // Delete copy constructor and assignment operator to avoid misuse
-    SerialHandshakeHandler(const SerialHandshakeHandler&) = delete;
-    SerialHandshakeHandler& operator=(const SerialHandshakeHandler&) = delete;
-
-  private:
-    // Private constructor to prevent instantiation
-    SerialHandshakeHandler() = default;
-    ~SerialHandshakeHandler() = default;
-
-    SerialConnectionManager &serialConnectionManager::getInstance();
-    SerialMessageHandler &serialMessageHandler::getInstance();
-};
 
 class SerialConnectionManager{
 
@@ -520,34 +512,64 @@ class StringMessageHandler
     }
 
     ParsedMessageStruct parseMessage (const String &message){ //Deconstructs a serial message in the format category,message,value,timestamp\n(\n is optional)
+      
       ParsedMessageStruct parsed;
-      if(message != negativeOneSentinel){
+      
+      if(message != negativeOneSentinel)
+      {
+        //Protocol format for message is "category,message,value,timestamp", so three commas
+        int commaCount = 0;
+        for (int i = 0; i < message.length(); i++) {
+          if (message.charAt(i) == messagePartSeparator) {
+            commaCount++;
+          }
+        }
+        
+        // If comma count isn't exactly 3, it's invalid
+        if (commaCount != 3) {
+          // Early return with isValid = false
+          parsed.message = nullptr;
+          parsed.value = NAN;
+          parsed.timestamp = negativeOneSentinel;
+    
+          return parsed;
+        }
+        
+        //Find comma positions for message separation
         int commaIndex = 0;
-
         int commaIndexes[3];
         int commaIndexesLength = sizeof(commaIndexes)/sizeof(*commaIndexes);
-
         for(int i = 0; i < commaIndexesLength; i++){
-          commaIndex = message.indexOf(messagePartSeparator, commaIndex + 1);
+          commaIndex = message.indexOf(messagePartSeparator, commaIndex + 1); //Find the next comma starting from nothing or the previous one
+          //Test necessity
           if (commaIndex >= 0 && commaIndex < message.length()){ //Avoid out of bounds
             commaIndexes[i] = commaIndex;
           }
           else{
-            int dummyVariable = 0; //Add some error handling here.
+            // If this ever fails, it's invalid
+            parsed.message = nullptr;
+            parsed.value = NAN;
+            parsed.timestamp = negativeOneSentinel;
+            parsed.isValid = false;
+            return parsed;
           }
         }
-
-        char messageCategory = message.charAt(commaIndexes[0] - 1);
-        char messageMessage = message.charAt(commaIndexes[1] - 1);
-        MessageStruct *messageStruct = findMessage(messageCategory, messageMessage);
+        
+        char messageCategory = message.charAt(commaIndexes[0] - 1); //First digit before the first comma
+        char messageMessage = message.charAt(commaIndexes[1] - 1); //First digit before the second comma
+        MessageStruct *messageStruct = findMessage(messageCategory, messageMessage); //Gets the correct message type using category and message
         if(messageStruct != nullptr){
           parsed.message = messageStruct;
         }
         else{
+          // Invalid because we didn't find the message
           parsed.message = nullptr;
-          int dummyVariable = 0; //Add some error handling here.
+          parsed.value = NAN;
+          parsed.timestamp = negativeOneSentinel;
+          parsed.isValid = false;
+          return parsed;
         }
-
+        
         float messageValue;
         String messageValueString = message.substring(commaIndexes[1] + 1, commaIndexes[2]);
         if(messageValueString != "NaN"){
@@ -557,27 +579,36 @@ class StringMessageHandler
         else{
           parsed.value = NAN;
         }
-
-        String messageTimestamp;
+        
         String messageTimestampString = message.substring(commaIndexes[2] + 1);
         if(messageTimestampString != "NaN"){
-          messageTimestamp = messageTimestampString;
-          parsed.timestamp = messageTimestamp;
+          // Check if timestamp format is valid
+          if(isTimestampFormatValid(messageTimestampString)){
+            parsed.timestamp = messageTimestampString;
+          }
+          else{
+            // Invalid timestamp
+            parsed.message = nullptr;
+            parsed.value = NAN;
+            parsed.timestamp = negativeOneSentinel;
+            parsed.isValid = false;
+            return parsed;
+          }
         }
-        else{
-          parsed.timestamp = negativeOneSentinel;
-        }
-
       }
-      else{
+      else
+      {
+        //In this case, there's no message
         parsed.message = nullptr;
         parsed.value = NAN;
         parsed.timestamp = negativeOneSentinel;
-        int dummyVariable = 0; //Add some error handling here
+        parsed.isValid = false;
+        return parsed;
       }
+      
+      parsed.isValid = true;
       return parsed;
     }
-
 
   private:
     // Private constructor to prevent external instantiation
@@ -589,6 +620,46 @@ class StringMessageHandler
     }
 
     char messagePartSeparator = ',';
+
+    // Verify timestamp format "%m/%d/%Y %H:%M:%S"
+    // Checks if the string has 19 characters with /, space, and colons, and numbers. It does NOT check if the day and month is correct, but that's not necessary.
+    bool isTimestampFormatValid(const String &ts) const
+    {
+      int len = ts.length();
+
+      // Minimum length is 13: "M/D/YYYY H:M:S"
+      // Maximum length is 19: "MM/DD/YYYY HH:MM:SS"
+      if(len < 13 || len > 19) return false;
+
+      // Find the positions of the delimiters
+      int firstSlash = ts.indexOf('/');
+      if(firstSlash == -1 || firstSlash < 1 || firstSlash > 2) return false;
+
+      int secondSlash = ts.indexOf('/', firstSlash + 1);
+      if(secondSlash == -1 || secondSlash < firstSlash + 2 || secondSlash > firstSlash + 3) return false;
+
+      int space = ts.indexOf(' ', secondSlash + 1);
+      if(space == -1 || space < secondSlash + 5 || space > secondSlash + 6) return false;
+
+      int firstColon = ts.indexOf(':', space + 1);
+      if(firstColon == -1 || firstColon < space + 2 || firstColon > space + 3) return false;
+
+      int secondColon = ts.indexOf(':', firstColon + 1);
+      if(secondColon == -1 || secondColon < firstColon + 2 || secondColon > firstColon + 3) return false;
+
+      // Check if all other characters are digits
+      for(int i = 0; i < len; i++){
+          if(i == firstSlash || i == secondSlash || i == space || i == firstColon || i == secondColon) {
+              // skip these since they're '/', '/', ' ', ':', ':'
+              continue;
+          }
+          if(!isDigit(ts.charAt(i))) {
+              return false;
+          }
+      }
+
+      return true;
+    }
 
     const MessageStruct* findMessage(char category, char message){
       for(size_t i = 0; i < Messages::NUM_MESSAGES; ++i){
@@ -659,8 +730,56 @@ class SerialMessageHandler
 
 };
 
+class SerialHandshakeHandler
+{
+  //If the whole procedure with both handshake and detection for going from serial contact to serial loss is implemented, the serial connection manager would need the handshake handler as a dependency and not opposite.
+  //The whole thing would happen in a handleSerialConnection method in the serial connectio manager, using the handshake handler
+  //This class will need to be moved to below all the other serial classes.
 
-//Furnace heating simulation, not important for the system, and can optionally be ignored
+  public:
+    // Static method to access the single instance
+    static SerialHandshakeHandler& getInstance() {
+        static SerialHandshakeHandler instance;
+        return instance;
+    }
+
+    void handleHandshake(const ParsedMessageStruct &message) {
+      if(message.message == &Messages::PING_PC_ARDUINO)
+      {
+        serialConnectionManager.serialConnection = true;
+        pingReceivedTimer.resetTimer();
+        serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
+      }
+      else
+      {
+        if(pingReceivedTimer.timedOut())
+        {
+          serialConnectionManager.serialConnection = false;
+        }
+      }
+    }
+
+    // Delete copy constructor and assignment operator to avoid misuse
+    SerialHandshakeHandler(const SerialHandshakeHandler&) = delete;
+    SerialHandshakeHandler& operator=(const SerialHandshakeHandler&) = delete;
+
+  private:
+    unsigned long pingReceivedTimeout = 15 * 1000;
+    Timer pingReceivedTimer;
+
+    // Private constructor to prevent instantiation
+    SerialHandshakeHandler()
+      : pingReceivedTimer(pingReceivedTimeout)
+    {}
+
+    ~SerialHandshakeHandler() = default;
+
+    SerialConnectionManager &serialConnectionManager = SerialConnectionManager::getInstance();
+    SerialMessageHandler &serialMessageHandler = SerialMessageHandler::getInstance();
+};
+
+
+//Oven heating simulation, not important for the system, and can optionally be ignored
 float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulationData) {
 
   if(heatingOn)
@@ -724,118 +843,154 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 
   return simulationData.currentTemp;
 }
-//max31856 CS designated pin for Chip Select (int), optional thermocouple type (int)
-Max31856Sensor temperatureSensor1(10);
 
-//heating element oven controll pin (int), goal temperature for furnace (float), absolute max temperature (float), force oven to stay off? (bool), use the heating simulation? (bool)
-Oven oven1(5, 30, 50, false, false);
+//User settings
+int oven1ControllPin = 5; //Controll pin for the oven.
+float oven1AbsoluteMax = 50;
 
-//All are optional. Time step (float), wattage (float), element heat buildup time (float), element heat cooldown time (float), oven heat capacity (float), heat loss in oven versus room temperature (float), room temperature (float), time step (float)
-SimulationData oven1SimulationData (devDelay / 1000);
+unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high.
+int srLatchResetPin = 6;
+int srLatchOutputPin = 7;
+
+bool useOven1TemperatureSensor = true;
+int oven1TemperatureSensorCSPin = 10; //CS = Chip Select. Does not need to be correct if not using temperature sensor.
+
+//Dev settings
+bool heatingOverride = false; //Oven might be connected and on, but you don't want the Arduino to controll it
+bool useHeatingSimulation = true; //You don't always have an oven
+
+
+
+
+
+bool generalEmergency = false; //Critical error. Oven controll SSR will be off as long as this is on.
+
+//Object instance pointer (*) ready to be initialiozed andset up later
+Oven *oven1 = nullptr;
+SrLatchFrozenWatchdog *oven1SrLatchFrozenWatchdog = nullptr;
+
+//Object instance pointers (*) ready to be initialiozed andset up later
+Max31856Sensor *oven1TemperatureSensor = nullptr;
+OvenOverheatWatchdog *oven1OverheatWatchdog = nullptr;
 
 SerialMessageHandler &serialMessageHandler = SerialMessageHandler::getInstance();
 SerialConnectionManager &serialConnectionManager = SerialConnectionManager::getInstance();
-
-
-unsigned long currentTime; //Put in new time keeping struct
-
-//Goes in the handshake class
-//Time between Python ping
-unsigned long serialPingTime = 62000; //60 seconds, with 2 seconds margin
-unsigned long lastSerialPingTime = NAN; //Ping might never happen
-unsigned long deltaSerialPingTime = NAN; //Ping might never happen
-//Time between ping and expected response
-unsigned long maxSerialPingReplyTime = 5000;
-unsigned long lastSerialPingReplyTime;
-unsigned long deltaSerialPingReplyTime;
+SerialHandshakeHandler &serialHandshakeHandler = SerialHandshakeHandler::getInstance();
 
 
 void setup() {
+  //Oven SSR pin (int), absolute max temperature (float), goal temperature for oven (float), force oven to stay off? (bool), use the heating simulation? (bool)
+  oven1 = new Oven(5, oven1AbsoluteMax);
+  oven1SrLatchFrozenWatchdog = new SrLatchFrozenWatchdog(externalPwmHighPeriod, srLatchResetPin, srLatchOutputPin);
+  oven1SrLatchFrozenWatchdog->begin();
+
+  if(useOven1TemperatureSensor)
+  {
+    //max31856 CS designated pin for Chip Select (int), optional thermocouple type (int)
+    oven1TemperatureSensor = new Max31856Sensor(oven1TemperatureSensorCSPin);
+    oven1TemperatureSensor->begin();
+    oven1OverheatWatchdog = new OvenOverheatWatchdog(oven1AbsoluteMax);
+  }
   serialConnectionManager.begin();
-  oven1.begin();
-  pinMode(3, OUTPUT);
+  oven1->begin();
 }
 
 void loop() {
 
-  currentTime = millis(); //Put in a getTime method, in a new timekeeping struct
-
   ParsedMessageStruct message = serialMessageHandler.getMessage();
 
-  if(MessageTimeouts::THERMOCOUPLE_ERROR.timedOut())
+  serialHandshakeHandler.handleHandshake(message);
+
+  if(useOven1TemperatureSensor)
   {
-    serialMessageHandler.passMessage(Messages::THERMOCOUPLE_ERROR);
-    MessageTimeouts::THERMOCOUPLE_ERROR.resetTimer();
-  }
-  if(MessageTimeouts::TEMPERATURE_READING.timedOut())
-  {
-    serialMessageHandler.passMessage(Messages::TEMPERATURE_READING);
-    MessageTimeouts::TEMPERATURE_READING.resetTimer();
-  }
-
-  // if(message->message == &Messages::PING_PC_ARDUINO){
-  //   digitalWrite(3, HIGH);
-  // }
-
-
-  // //Get all of this, including whatever in the global scope they use, into their structs or classes, in batch
-  // if(SerialHandshakeHandler::checkHandshake(message)){
-    serialConnectionManager.serialLost = false;
-  //   serialMessageHandler.passMessage(Messages::PING_ARDUINO_PC);
-  //   lastSerialPingTime = currentTime;
-  // }
-
-  
-  // if(!isnan(lastSerialPingTime)){
-  //   deltaSerialPingTime = currentTime - lastSerialPingTime;
-  // }
-  // if(SerialConnectionManager.serialLoss = false && deltaSerialPingTime >= serialPingTime){
-  //   serialConnectionManager.serialLoss = SerialConnectionManager.serialLoss = true;
-  // }
-  
-
-  // delay(1000);
-  // // put your main code here, to run repeatedly:
-  // delay(devDelay);
-
-  if (oven1.useHeatingSimulation) {
-    //Why isn't the oven1SimulationData instanciated inside the oven1 object like everything else!!! It could always be changed again to be passed as a parameter if it uses too many resources.
-    oven1.currentTemp = tempSimulation(oven1.heatingOn, oven1.currentTemp, oven1SimulationData);
-  } else {
-    if(!oven1.temperatureSensorFailAlarm){
-      oven1.currentTemp = temperatureSensor1.read_temperature();
+    {
+      if(!oven1TemperatureSensor->temperatureSensorFailAlarm)
+      {
+        oven1->currentTemp = oven1TemperatureSensor->readTemperature();
+      }
     }
-  }
 
-  if (oven1.currentTemp <= oven1.tempGoal) {
-    oven1.heatingOn = true;
-  } else {
-    oven1.heatingOn = false;
-  }
-
-  if (oven1.heatingOverride) {
-    digitalWrite(oven1.heatingElement, LOW);
-  }
-  else
-  {
-    if (oven1.heatingOn) {
-      digitalWrite(oven1.heatingElement, HIGH);
+    if(!oven1TemperatureSensor->temperatureSensorFailAlarm)
+    {
+      if(!isnan(oven1->currentTemp) && serialConnectionManager.serialConnection)
+      {
+        if(MessageTimeouts::TEMPERATURE_READING.timedOut())
+        {
+          serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1->currentTemp);
+          MessageTimeouts::TEMPERATURE_READING.resetTimer();
+        }
+      }
     }
     else
     {
-      digitalWrite(oven1.heatingElement, LOW);
+      generalEmergency = true;
     }
   }
 
-  serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1.currentTemp);
-  Serial.println(temperatureSensor1.temperatureSensorFailAlarm);
-  Serial.println("Der!");
+  if(useOven1TemperatureSensor && !oven1OverheatWatchdog->ovenOverheat)
+  {
+    oven1OverheatWatchdog->check_overheat(oven1->currentTemp, oven1TemperatureSensor->temperatureSensorFailAlarm);
+  }
+  if(!oven1SrLatchFrozenWatchdog->srLatchFrozen)
+  {
+    oven1SrLatchFrozenWatchdog->checkSrLatchFrozen();
+  }
+  if(oven1OverheatWatchdog->ovenOverheat || oven1SrLatchFrozenWatchdog->srLatchFrozen)
+  {
+    generalEmergency = true;
+  }
+  if(generalEmergency)
+  {
+    oven1->turnOvenControllPinOff();
+  }
+  else
+  {
+    oven1->turnOvenControllPinOn();
+  }
 
-  // Serial.println(oven1.currentTemp);
-  // Serial.println(oven1.heatingOn);
-  // // // digitalWrite(oven1.heatingElement, HIGH);
-  // // // delay(2000);
-  // // // digitalWrite(oven1.heatingElement, LOW);
-  // // // delay(2000);
-  // Serial.println("01,02,NaN,NaN");
+  if(serialConnectionManager.serialConnection)
+  {
+    sendAlarmMessages(
+      generalEmergency,
+      oven1TemperatureSensor->temperatureSensorFailAlarm,
+      oven1OverheatWatchdog->ovenOverheat,
+      oven1SrLatchFrozenWatchdog->srLatchFrozen
+    );
+  }
+}
+
+void sendAlarmMessages(bool generalEmergency, bool temperatureSensorFailAlarm, bool ovenOverheat, bool srLatchFrozen)
+{
+  if(generalEmergency)
+  {
+      if(MessageTimeouts::EMERGENCY_ALARM.timedOut())
+      {
+        serialMessageHandler.passMessage(Messages::EMERGENCY_ALARM);
+        MessageTimeouts::EMERGENCY_ALARM.resetTimer();
+      }
+  }
+  if(oven1TemperatureSensor->temperatureSensorFailAlarm)
+  {
+    if(MessageTimeouts::THERMOSENSOR_ERROR.timedOut())
+      {
+        serialMessageHandler.passMessage(Messages::THERMOSENSOR_ERROR);
+        MessageTimeouts::THERMOSENSOR_ERROR.resetTimer();
+      }
+  }
+  if(oven1OverheatWatchdog->ovenOverheat)
+  {
+    if(MessageTimeouts::OVEN_OVERHEAT.timedOut())
+      {
+        serialMessageHandler.passMessage(Messages::OVEN_OVERHEAT);
+        MessageTimeouts::OVEN_OVERHEAT.resetTimer();
+      }
+  }
+  if(oven1SrLatchFrozenWatchdog->srLatchFrozen)
+  {
+    if(MessageTimeouts::WATCHDOG_SR_LATCH_FROZEN.timedOut())
+      {
+        serialMessageHandler.passMessage(Messages::WATCHDOG_SR_LATCH_FROZEN);
+        MessageTimeouts::WATCHDOG_SR_LATCH_FROZEN.resetTimer();
+      }
+  }
 }

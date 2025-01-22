@@ -2,22 +2,22 @@
 {\*\generator Riched20 10.0.17763}\viewkind4\uc1 
 \pard\sa200\sl276\slmult1\f0\fs22\lang20 This system has an Arduino as the central controll unit, and could, in the long run, run multiple furnaces at once, but these use cases are very few.\par
 The controller can run as a standalone, but has extended functionality when interfaced with an interface like a computer.\par
-The controller sends a PWM signal through a wire that is directly connected to the furnace's SSR. If the oven has a relay, it is way too old. The signal won't be able to controll it.\par
+The controller sends a PWM signal through a wire that is directly connected to the furnace's SSR. If the furnace has a relay, it is way too old. The signal won't be able to controll it.\par
 Each furnace is set up by the technician with individual max temperature and if it has an in-buildt failsafe security to prevent overheating, via the GUI or from Labview. The technician will be forced to set a max temperature from an external device before the system starts.\par
-The nominal temperature of any components used to modify the oven like temperature sensors also needs to be taken into account when setting the oven's maximum temperature.\par
+The nominal temperature of any components used to modify the furnace like temperature sensors also needs to be taken into account when setting the furnace's maximum temperature.\par
 Because of delays in the furnace's temperature responsiveness, the temperature can increase quite dramatically even after it is turned off. For the Heraeus Muffel 3, this is in excess of some 70 degrees at the most if the temperature increases quickly.\par
-The max temperature for the watchdog module or the oven's buildt-in overtemperature protector should be set to well below the furnace's nominal temperature.\par
+The max temperature for the watchdog module or the furnace's buildt-in overtemperature protector should be set to well below the furnace's nominal temperature.\par
 All settings meant only for the technician should be accessible only through the GUI with password protection and a clear, red notice that it's only for technicians, and from Labview's programming, made inaccessible to the end user. Preferrably, a password should protect this too, Terje might do this.\par
-If the furnace does not have an in-buildt failsafe security, the watchdog module as part of the system, that prevents overheating by guarding temperature and oven SSR PWM signal freeze, is used instead, and a secondary thermocouple is connected to the controller.\par
-The Heraeus Muffel 3 has allready an over-temperature protection. Every new furnace that does not use the watchdog module needs this as well in some way or another like a bi-metal to reliably prevent overheating. Consult with the data sheet/user manual. It should be NO (Normally Open) to make it more failsafe. Alternatively, the watchdog module with max temperature shutoff and oven SSR signal PWM check, will securely prevent overheating, under the technician's responsibility.\par
-The watchdog module can give some security if the oven does not have an overtemperature-protector, but then it's the technician's responsibility to ensure the system complies with all laws and regulations.\par
+If the furnace does not have an in-buildt failsafe security, the watchdog module as part of the system, that prevents overheating by guarding temperature and furnace SSR PWM signal freeze, is used instead, and a secondary thermosensor is connected to the controller.\par
+The Heraeus Muffel 3 has allready an over-temperature protection. Every new furnace that does not use the watchdog module needs this as well in some way or another like a bi-metal to reliably prevent overheating. Consult with the data sheet/user manual. It should be NO (Normally Open) to make it more failsafe. Alternatively, the watchdog module with max temperature shutoff and furnace SSR signal PWM check, will securely prevent overheating, under the technician's responsibility.\par
+The watchdog module can give some security if the furnace does not have an overtemperature-protector, but then it's the technician's responsibility to ensure the system complies with all laws and regulations.\par
 The watchdog is a separate Arduino with an SSR and any other necessary components, so it's independent from the main controller. It's on the same card though.\par
-If the watchdog module is used, the thermocouples are continously checked controller-side to compare them and see if any of them fail, potentially showing a lower temperature than what it actually is. Example scenario: The watchdog thermocouple shows 30 degrees continuously. The other shows 900, so something is wrong.\par
+If the watchdog module is used, the thermosensors are continously checked controller-side to compare them and see if any of them fail, potentially showing a lower temperature than what it actually is. Example scenario: The watchdog thermosensor shows 30 degrees continuously. The other shows 900, so something is wrong.\par
 Temperatures are communicated between the main controller system's Arduino and the watchdog's Arduino.\par
 If no temperature has been communicated between main controller Arduino and watchdog Arduino within a time frame of five seconds, indicate lost connection and turn off the furnace.\par
 The end user should not, under any circumstance, be able to adjust any furnace's max temperature. It is entirely the techician's responsibility to set up the controller for any furnace used.\par
-The watchdog module knows if the PWM signal is frozen by checking if the PWM signal is frozen over one second. The, something is wrong, and the temperature in the oven will be turned off.\par
-If the watchdog detects either that the PWM signal is frozen or the temperature is above the oven's set nominal, it will turn the oven off asap.\par
+The watchdog module knows if the PWM signal is frozen by checking if the PWM signal is frozen over one second. The, something is wrong, and the temperature in the furnace will be turned off.\par
+If the watchdog detects either that the PWM signal is frozen or the temperature is above the furnace's set nominal, it will turn the furnace off asap.\par
 One big limitation is the Arduino's resources like CPU and RAM. One way to potentially solve this in the future is offloading to an FPGA, allowing more to be moved from the interface to the Arduino controller.\par
 Other ways to interface the Arduino with the furnace might be implemented later, like via USB, ethernet, etc.\par
 Bluetooth, USB, and potentially ethernet for longer range will be used between the interface and controller. Wifi might be tricky as the university's security will make development tricky.\par
@@ -29,7 +29,7 @@ Kp (proportional) is how sharp the regulating value changes. Too much can overad
 Kd (derivative) limits the proportional swing by a fixed value. Too much makes it sluggish!\par
 Ki (integral) Adjusts the Kd over time to get the value change more accurate (?). Too much can overadjust.\par
 Arduino clock can be used for a periodic connectivity ping between interface and controller, and with the watchdog module, since accuracy is not important here.\par
-Oven must get 230V directly from a wall outlet. Extenders and splitters may overheat.\par
+Furnace must get 230V directly from a wall outlet. Extenders and splitters may overheat.\par
 Structs are prioritised on the Arduino since they are public and therefore keeps resource intensive things like polymorphism, encapsulation, and access controll away.\par
 On Arduino, digits only are used instead of strings for referring to messages trabsmitted over serial where practical for resource efficiency.\par
 A controll cable is used for relay controll, since a good signal integrity is not necessary.\par
@@ -56,9 +56,10 @@ Instead of using timestamps for commands sent from the Arduino as ecorded from t
 Store the furnace signal pin and PID controller/watchdog module modes set by the user in persistent memory on the Arduino like the EPROM instead of on the user's computer. No need to pass JSON files around. Keep sending them over serial during setup and check Arduino-side if it's changed. The user will not need to specify them every time when using the GUI. Send NaN for no update.\par
 The user can change the pin values while the Arduino is running. Only the absolute max temperature, and goal temperature in PID mode that's not implemented should be changed.\par
 Currently, status updates and user messages are only sent to a GUI. For Labview to interface with the program, it will be necessary with a place Labview can access them too. Sending to a universally accessible storage can allow both the GUI and Labview to read them. Just make shure problems don't occur if they both access it at the same time, like by using an asynchronous queue.\par
-The system is currently limited to thermocouples, but there's also furnaces use PT-100 elements.\par
+The system is currently limited to MAX31856 thermosensors, but there's also furnaces use PT-100 elements.\par
 It is detectable if the SR latch external input signal is frozen high by very quickly dropping it to low once every two seconds. If it was quickly set to high when it's meant to off in the same way, the Arduino can know if it's frozen low as well. This is probably not necessary.\par
+Add a unit number in the serial message protocol so that not only message and value is available, but also what furnace, thermosensor etc we want.\par
 \par
-HEY. TALK TO TERJE AND BEHZAD ABOUT ALWAYS HAVING TO USE SOME OVER TEMPERATURE PROTECTION ON THE OVEN ITSELF. IT COULD BE SAFER, BUT ALSO BE MORE IMPRACTICAL.\par
+HEY. TALK TO TERJE AND BEHZAD ABOUT ALWAYS HAVING TO USE SOME OVER TEMPERATURE PROTECTION ON FURNACE ITSELF. IT COULD BE SAFER, BUT ALSO BE MORE IMPRACTICAL.\par
 }
  
