@@ -845,12 +845,12 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 }
 
 //User settings
-int oven1ControllPin = 5; //Controll pin for the oven.
+int oven1ControllPin = 7; //Controll pin for the oven SSR.
 float oven1AbsoluteMax = 50;
 
 unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high.
-int srLatchResetPin = 6;
-int srLatchOutputPin = 7;
+int srLatchResetPin = 4;
+int srLatchOutputPin = 5;
 
 bool useOven1TemperatureSensor = true;
 int oven1TemperatureSensorCSPin = 10; //CS = Chip Select. Does not need to be correct if not using temperature sensor.

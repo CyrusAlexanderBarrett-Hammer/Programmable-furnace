@@ -59,6 +59,7 @@ Currently, status updates and user messages are only sent to a GUI. For Labview 
 The system is currently limited to MAX31856 thermosensors, but there's also furnaces use PT-100 elements.\par
 It is detectable if the SR latch external input signal is frozen high by very quickly dropping it to low once every two seconds. If it was quickly set to high when it's meant to off in the same way, the Arduino can know if it's frozen low as well. This is probably not necessary.\par
 Add a unit number in the serial message protocol so that not only message and value is available, but also what furnace, thermosensor etc we want.\par
+If there's a PWM frozen high error, a thermosensor error, or a furnace overheat error, the Python program won't clear these errors when the Arduino is reset. This is because the error serial messages don't have set/clear values. Either have a timeout Python side that resets errors if they are not received within a timeframe with serial connection, or maybe easier, use set/clear values for each error and send them continously. This will cause more traffic on the serial buffer, though.\par
 \par
 HEY. TALK TO TERJE AND BEHZAD ABOUT ALWAYS HAVING TO USE SOME OVER TEMPERATURE PROTECTION ON FURNACE ITSELF. IT COULD BE SAFER, BUT ALSO BE MORE IMPRACTICAL.\par
 }
