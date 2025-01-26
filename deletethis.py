@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from collections import namedtuple
 import asyncio
+from concurrent.futures import Future
 import serial
 import serial.tools.list_ports
 import threading
@@ -268,11 +269,9 @@ class SerialConnectionManager:
 
     port_initialization_time = 1.6
 
-    def __init__(self, event_loop, port_name, baud_rate=9600, timeout=2, gui_queue=None):
+    def __init__(self, port_name, baud_rate=9600, timeout=2, gui_queue=None):
         self.serial_handshake_handler = None #Needs instanciation of SerialHandshakeHandler at a higher level before being set due to circular dependencies
         self.serial_message_handler = None #Same, but for SerialMessageHandler
-
-        self.loop = event_loop
         
         self.port_name = port_name # Store the COM port name (like COM18)
         self.baud_rate = baud_rate # Store the baud rate
@@ -340,9 +339,11 @@ class SerialConnectionManager:
             except Exception as e:
                 raise
             #No success? Wrong! Do it again! (No dark sarcasm in the classroom)
+        
         self.serial_loss = False #Got this far? Serial port is confirmed.
         self.gui_queue.put({"serial_error": "running smoothy"})
         self.gui_queue.put({"serial_status": "serial connection established"})
+        
         #Success, start or resume periodic serial processes
         self.serial_message_handler.start_serial_readings()
         self.serial_handshake_handler.start_ping_loop()
@@ -443,11 +444,9 @@ class SerialConnectionManager:
 
 class SerialMessageHandler:
 
-    def __init__(self, event_loop, serial_connection_manager, string_message_handler, serial_readings_interval = 0.2):
+    def __init__(self, serial_connection_manager, string_message_handler, serial_readings_interval = 0.2):
         self.serial_connection_manager = serial_connection_manager
         self.string_message_handler = string_message_handler
-
-        self.loop = event_loop
 
         self.serial_readings_interval = serial_readings_interval
 
@@ -613,12 +612,10 @@ class SerialMessageHandler:
 
 class SerialHandshakeHandler:
 
-    def __init__(self, event_loop, serial_connection_manager, serial_message_handler, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
+    def __init__(self, serial_connection_manager, serial_message_handler, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
         self.serial_message_handler = serial_message_handler
         self.string_message_handler = self.serial_message_handler.string_message_handler
         self.serial_connection_manager = serial_connection_manager
-
-        self.event_loop = event_loop
 
         self.handshake_message = handshake_message
         self.handshake_response = handshake_response
@@ -704,8 +701,7 @@ class SerialManager():
     Encapsulates connection management, message handling, and handshake processes.
     """
 
-    def __init__(self, event_loop, gui_queue = None):
-        self.loop = event_loop
+    def __init__(self, gui_queue = None):
         self.gui_queue = gui_queue
         
         self.port_name = ""
@@ -724,8 +720,6 @@ class SerialManager():
         self.messages = {}
         self.valid_messages = ""
 
-        self.loop = asyncio.new_event_loop() # Create a new event loop
-
         self.lock = asyncio.Lock()
 
 
@@ -743,9 +737,9 @@ class SerialManager():
         try:
             #Input from GUI or unimplemented Labview starts serial processes when values like the COM port is known.
             self.string_message_handler = StringMessageHandler(self.messages)
-            self.serial_connection_manager = SerialConnectionManager(self.loop, self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
-            self.serial_message_handler = SerialMessageHandler(self.loop, self.serial_connection_manager, self.string_message_handler)
-            self.serial_handshake_handler = SerialHandshakeHandler(self.loop, self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
+            self.serial_connection_manager = SerialConnectionManager(self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
+            self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager, self.string_message_handler)
+            self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
         except (ValueError, TypeError, KeyError): #This is an entry point, but copy-pasting 50 lines of code is avoided.
             raise
         
@@ -825,8 +819,255 @@ class SerialManager():
             self.loop
         )
 
+class FuturesBridge:
+    """
+    Used when running coroutines from a different event loop.
+    Data about each method call (method name, arguments, return data, exception) are stored and can externally be handled when ready, if any.
+    Has mechanisms to only allow running a coroutine from one place at a time, if wanted. Simple reject if yes.
+    """
+
+    def __init__(self, event_loop):
+        self.loop = event_loop
+        self.futures_metadata = {} #{Future{"method_name", "params", "done", "return_data", "exception"}}In here will be one or more dictionaries with method call data.
+        self.lock = threading.Lock()
+
+    def schedule_coroutine(self, coro, method_name, allow_parallel = False, **params):
+        """
+        Schedules the passed coroutine coro, and stores it's given and eventual metadata in self.futures_data
+        :param corro: The method (can have arguments) to be run in different event loop
+        :param method_name: The name of the run method, it's not robust to get the method name dynamically
+        :param allow_parallel: Let two methods of the same name run at the same time?
+        :param params: Any arguments sent to the called method that should be in the metadata?
+        :raises RuntimeError: If the method is allready running with allow_parallel = True
+        """
+
+        with self.lock:
+            if not allow_parallel:
+                #Refuse to run if the method with given passed name is allready running
+                for fut, metadata in self.futures_metadata.items():
+                    if metadata["method_name"] == method_name and not fut.done():
+                        raise RuntimeError(f"Method '{method_name}' is already running") #Rejection!
+
+        fut = asyncio.run_coroutine_threadsafe(coro, self.loop) #Run the coroutine in the given event loop
+        info = {
+            "method_name": method_name,
+            "params": params,
+            "done": False,
+            "return_data": None,
+            "exception": None
+        }
+
+        with self.lock:
+            self.futures_metadata[fut] = info
+
+    def poll_futures(self):
+        """
+        Gives the metatdata for any futures for completed methods in a list of dictionaries, one future per index
+        The future is tested for any exceptions raaised while running the coroutine, and that is stored in the metadata
+        
+        return: List with dictionaries, one per completed future, with their metadata method_name, params, return_data, and exception 
+        """
+        completed = []
+        with self.lock:
+            remove = [] #Remove these futures if they are going to be put in the return list
+            #Get metadata for all active futures
+            for fut, metadata in self.futures_metadata.items():
+                if fut.done() and not metadata["done"]:
+                    metadata["done"] = True #Avoid redundant iterations
+
+                    #Test for exceptions
+                    try:
+                        return_data = fut.result()
+                    except Exception as e:
+                        metadata["exception"] = e
+
+                    completed.append({
+                        "method_name": metadata["method_name"],
+                        "params": metadata["params"],
+                        "return_data": metadata["return_data"],
+                        "exception": metadata["exception"]
+                    })
+                    remove.append(fut)
+
+            for fut in remove:
+                self.futures_metadata.pop(fut, None) #Gone, no longer needed, bye!
+
+        return completed
 
 
+class Interface:
+
+    def __init__(self, serial_manager):
+        # Direct method calls are used instead of a GUI queue like in the SerialManager.
+        # Using a queue system or a thread-safe data structure would likely be more optimal for both.
+        # A queue system requires centralized handling since queues operate on a FIFO basis.
+        # Currently, a queue is used for the GUI because it simplifies communication to a single destination.
+        # Moving queue initialization to the process manager level could centralize storage and resolve circular dependencies 
+        # (e.g., the GUI needing to be instantiated before the SerialManager).
+        # A unified queue could handle all updates (GUI, status, etc.), sorted into a dictionary by a high-level process.
+
+        self.serial_manager = serial_manager
+
+        self.main_task = None
+        self.setup_serial_task = None
+
+        self.emergency_stop_active = False
+
+        #Arduino alarm statuses
+        self.thermosensor_error = False
+        self.watchdog_pwm_frozen = False
+        self.furnace_overheat = False
+
+        self.furnace_temperature = None
+
+        if not isinstance(self.serial_manager, SerialManager):
+            raise TypeError(f"serial_manager needs to be a SerialManager object, got {type(self.serial_manager).__name__}")
+
+
+    def begin(self):
+        pass #In case parameters need to be set after instanciation, or something else
+    
+    def get_furnace_temperature_status(self):
+        return self.furnace_temperature
+
+    def get_thermosensor_error_status(self):
+        return self.thermosensor_error
+
+    def get_watchdog_pwm_frozen_status(self):
+        return self.watchdog_pwm_frozen
+    
+    def get_furnace_overheat_status(self):
+        return self.furnace_overheat
+
+    def send_emergency_stop(self):
+        self.emergency_stop_active = True
+
+
+    def start_main(self):
+        self.main_task = asyncio.create_task(self.run_main())
+
+    def stop_main(self):
+        # Cancel the serial reading loop task if it's running
+        if self.main_task:
+            self.main_task.cancel()
+
+    def start_setup_serial(self, port_name):
+        self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
+        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+        
+    def stop_setup_serial(self):
+        # Cancel the serial reading loop task if it's running
+        if self.setup_serial_task:
+            self.setup_serial_task.cancel()
+
+    async def run_main(self):
+        try:
+            while True:
+                connection_info = self.serial_manager.get_connection_info()
+                serial_loss = connection_info["serial_loss"]
+                if serial_loss:
+                    self.serial_connection_timer = None
+                    #Will run while the rest of the code runs
+                    if not self.setup_serial_task:
+                        self.start_setup_serial()
+                
+                furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
+                self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
+
+                #The errors are only cleared Arduino-side if the Arduino is restarted. This program will need a restart too, it lackas an error clearance if no error after some time of serial communication.
+                thermosensor_error_result = self.serial_manager.find_message("thermosensor_error")
+                self.thermosensor_error = True if thermosensor_error_result is not None else None
+
+                watchdog_pwm_frozen_result = self.serial_manager.find_message("watchdog_pwm_frozen")
+                self.watchdog_pwm_frozen = True if watchdog_pwm_frozen_result is not None else None
+
+                furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
+                self.furnace_overheat = True if furnace_overheat_result is not None else None
+                
+                if self.emergency_stop_active:
+                    self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding!
+                
+        except asyncio.CancelledError:
+            print("Serial reading loop cancelled. Running cleanup.")
+            self.stop_setup_serial()
+
+
+class ProcessManager:
+    #See comment in interface class
+    """
+    Encapsulates overall procedures for managing processes
+    """
+
+    def __init__(self, use_gui):
+        self.use_gui = use_gui
+
+        #GUI will run in the main thread and trigger methods via futures_bridge, the rest will run in a background thread
+        #Truly simultaneously running tasks is done with threads, as opposed to event loops...
+        # ...They are shortcuts to allowing other processes to run in between each other, automatically switching between async methods (or coroutines) whenever possible (like in between actions or during async sleep())
+        #If the GUI and the rest is run in the same thread, the GUI might lag.
+        #Locks (async.Lock()) forces a process to wait for accessing places in memory until no other processes do it.
+        #Using "with async.lock() means the place in memory will only be locked for as long as it's used at the moment.
+        #Threads are required to use event loops, and in turn, coroutines. Tkinter GUIs have to be run in the main thread (what's usually run without multithreading), but does not require an event loop.
+        #run_coroutine_threadsafe(coro, event) runs a coroutine (coro) in the given event loop (event). Whatever called run_coroutine_threadsafe continues meanwhile without waiting.
+        #When a normal method calls a coroutine (ike via run_coroutine_threadsafe), any errors or return values will only be available after the coroutine finished. Meanwhile, the method allready has finished.
+        #That's why the futures_bridge is there. It stores these as so-called futures, that are then accessed afterward when available.
+
+        self.futures_bridge = None
+
+        self.gui = None
+
+        self.serial_manager = None
+        self.interface = None
+
+        # The single event loop for all async tasks. GUI has no event loop.
+        self.loop = asyncio.new_event_loop()
+
+        # Thread that will run the above loop
+        self.asyncio_thread = None
+
+    # Boots up the system
+    def startup(self):
+        #Instanciate GUI
+        if self.use_gui:
+            self.gui = GUI()
+        else:
+            print("Starting system without GUI")
+        
+        #Used by any top-level class like GUI or Labview functions to interact with coroutines
+        self.futures_bridge = FuturesBridge(self.loop)
+
+        #Instanciate async components
+        self.serial_manager = SerialManager(gui_queue = self.gui.gui_queue)
+        self.interface = Interface(self.serial_manager)
+
+        #Working with circular dependencies. Serial manager needed the GUI for gui_queue first
+        if self.gui:
+            self.gui.begin(self.futures_bridge, self.serial_manager, self.interface)
+
+        #Start the asyncio event loop in a separate thread. It targets run_asyncio_loop to run it in the thread.
+        self.asyncio_thread = threading.Thread(target = self.run_asyncio_loop)
+        self.asyncio_thread.start()
+
+        if self.gui:
+            self.gui.run()
+
+    def run_asyncio_loop(self):
+        #A mew thread targets this method, so it's running there. Start the event loop self.loop in that thread.
+        asyncio.set_event_loop(self.loop)
+            
+        #Keep the event loop running and ready for use
+        self.loop.run_forever()
+
+    #Fix and use graceful shutdown and add more shutdown detections. Shutdown is currently not implemented for all classes, but is on good way.
+    def full_shutdown(self):
+        self.serial_manager.shutdown()
+        # Stop event loop
+        if self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+        # Join the background thread
+        if self.asyncio_thread:
+            self.asyncio_thread.join()
+        print("Shutdown complete.")
 
 
 class GUI:
@@ -834,8 +1075,8 @@ class GUI:
 
     gui_update_interval = 100
 
-    def __init__(self, background_to_main_thread_interface, event_loop):
-        self.event_loop = event_loop
+    def __init__(self):
+        self.futures_bridge = None
 
         self.serial_manager = None #Working around circular dependencies. Will be set to SerialManager by shared reference after GUI's instanciation.
         self.serial_handshake_handler = None
@@ -867,7 +1108,9 @@ class GUI:
         # Start the update loop for real-time updates
         self.root.after(self.gui_update_interval, self.check_queue)
 
-    def begin(self, serial_manager, interface):
+    def begin(self, futures_bridge, serial_manager, interface):
+        self.futures_bridge = futures_bridge
+        
         self.serial_manager = serial_manager
         self.serial_handshake_handler = self.serial_manager.serial_handshake_handler
 
@@ -912,196 +1155,6 @@ class GUI:
 
     def run(self):
         self.root.mainloop()
-
-
-class Interface:
-
-    def __init__(self, serial_manager, event_loop):
-        # Direct method calls are used instead of a GUI queue like in the SerialManager.
-        # Using a queue system or a thread-safe data structure would likely be more optimal for both.
-        # A queue system requires centralized handling since queues operate on a FIFO basis.
-        # Currently, a queue is used for the GUI because it simplifies communication to a single destination.
-        # Moving queue initialization to the process manager level could centralize storage and resolve circular dependencies 
-        # (e.g., the GUI needing to be instantiated before the SerialManager).
-        # A unified queue could handle all updates (GUI, status, etc.), sorted into a dictionary by a high-level process.
-        #I'm short on time, though! Can't change much now.
-
-        self.serial_manager = serial_manager
-
-        self.main_task = None
-        self.setup_serial_task = None
-
-        self.send_emergency_stop = False
-
-        #Arduino alarm statuses
-        self.thermosensor_error = False
-        self.watchdog_pwm_frozen = False
-        self.furnace_overheat = False
-
-        self.furnace_temperature = None
-
-        if not isinstance(self.serial_manager, SerialManager):
-            raise TypeError(f"serial_manager needs to be a SerialManager object, got {type(self.serial_manager).__name__}")
-
-
-    def begin(self):
-        pass #In case parameters need to be set after instanciation, or something else
-    
-    def get_furnace_temperature_status(self):
-        return self.furnace_temperature
-
-    def get_thermosensor_error_status(self):
-        return self.thermosensor_error
-
-    def get_watchdog_pwm_frozen_status(self):
-        return self.watchdog_pwm_frozen
-    
-    def get_furnace_overheat_status(self):
-        return self.furnace_overheat
-
-    def send_emergency_stop(self):
-        self.send_emergency_stop = True
-
-
-    def start_main(self):
-        self.main_task = asyncio.create_task(self.run_main())
-
-    def stop_main(self):
-        # Cancel the serial reading loop task if it's running
-        if self.main_task:
-            self.main_task.cancel()
-
-    def start_setup_serial(self, port_name):
-        self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
-        self.setup_serial_task = asyncio.create_task(self.serial_amnager.setup_serial())
-        
-
-    def stop_setup_serial(self):
-        # Cancel the serial reading loop task if it's running
-        if self.setup_serial_task:
-            self.setup_serial_task.cancel()
-
-    async def run_main(self):
-        try:
-            while True:
-                connection_info = self.serial_manager.get_connection_info()
-                serial_loss = connection_info["serial_loss"]
-                if serial_loss:
-                    self.serial_connection_timer = None
-                    #Will run while the rest of the code runs
-                    if not self.setup_serial_task:
-                        self.start_setup_serial()
-                else:
-                    if not self.serial_connection_timer is None:
-                
-                furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
-                self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
-
-                #The errors are only cleared Arduino-side if the Arduino is restarted. This program will need a restart too, it lackas an error clearance if no error after some time of serial communication.
-                thermosensor_error_result = self.serial_manager.find_message("thermosensor_error")
-                self.thermosensor_error = True if thermosensor_error_result is not None else None
-
-                watchdog_pwm_frozen_result = self.serial_manager.find_message("watchdog_pwm_frozen")
-                self.watchdog_pwm_frozen = True if watchdog_pwm_frozen_result is not None else None
-
-                furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
-                self.furnace_overheat = True if furnace_overheat_result is not None else None
-                
-                if send_emergency_stop:
-                    self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding! (It's official, but does not need to be flexible.)
-                
-        except asyncio.CancelledError:
-            print("Serial reading loop cancelled. Running cleanup.")
-            self.stop_setup_serial()
-
-
-class ProcessManager:
-    #See comment in interface class
-    """
-    Encapsulates overall procedures for managing processes
-    """
-
-    def __init__(self, use_gui):
-        self.use_gui = use_gui
-
-        #GUI will run in the main thread, the rest will run in a background thread
-        #Truly simultaneously running tasks is done with threads, as opposed to event loops...
-        # ...They are shortcuts to allowing other processes to run in between each other, automatically switching between async methods (or coroutines) whenever possible (like in between actions or during async sleep())
-        #If the GUI and the rest is run in the same thread, the GUI might lag.
-        #Locks (async.Lock()) forces a process to wait for accessing places in memory until no other processes do it.
-        #Using "with async.lock() means the place in memory will only be locked for as long as it's used at the moment.
-        #Threads are required to use event loops, and in turn, coroutines. Tkinter GUIs have to be run in the main thread, but does not require an event loop.
-        self.gui = None
-
-        self.serial_manager = None
-        self.interface = None
-
-        # The single event loop for all async tasks. GUI has no event loop.
-        self.loop = asyncio.new_event_loop()
-
-        # Thread that will run the above loop
-        self.asyncio_thread = None
-
-    # Boots up the system
-    def startup(self):
-        #Instanciate GUI
-        if self.use_gui:
-            self.gui = GUI(self.loop)
-        else:
-            print("Starting system without GUI")
-        
-        #Instanciate async components
-        self.serial_manager = SerialManager(self.loop, gui_queue = self.gui.gui_queue)
-        self.interface = Interface(self.serial_manager, self.loop)
-
-        #Working with circular dependencies. Serial manager needed the GUI for gui_queue first
-        if self.gui:
-            self.gui.begin(self.serial_manager, self.interface)
-
-        #Start the asyncio event loop in a separate thread. It targets run_asyncio_loop to run it in the thread.
-        self.asyncio_thread = threading.Thread(target = self.run_asyncio_loop)
-        self.asyncio_thread.start()
-
-        if self.gui:
-            self.gui.run()
-
-    def run_asyncio_loop(self):
-        #A mew thread targets this method, so it's running there. Start the event loop self.loop in that thread.
-        asyncio.set_event_loop(self.loop)
-            
-        #Keep the event loop running and ready for use
-        self.loop.run_forever()
-
-    #Fix and use graceful shutdown and add more shutdown detections 
-    def full_shutdown(self):
-        self.serial_manager.shutdown()
-        # Stop event loop
-        if self.loop.is_running():
-            self.loop.call_soon_threadsafe(self.loop.stop)
-        # Join the background thread
-        if self.asyncio_thread:
-            self.asyncio_thread.join()
-        print("Shutdown complete.")
-
-
-        # # Start asyncio event loop in a separate thread
-        # self.asyncio_thread = threading.Thread(target=self.run_asyncio_loop, daemon=True)
-        # self.asyncio_thread.start()
-
-        # try:
-        #     if self.use_gui:
-        #         self.gui = GUI()
-        #         self.serial_manager = SerialManager(self.gui.gui_queue)
-        #         print("Starting system with GUI")
-        #         self.gui.begin(self.serial_manager)
-        #         # Run the GUI in the main thread
-        #         self.gui.run()
-        #     else:
-        #         print("Starting system without GUI")
-        #         self.serial_manager = SerialManager()
-        # except KeyboardInterrupt: #Fix graceful shutdown and add more shutdown detections
-        #     print("Program interrupted by user.")
-        #     self.full_shutdown()
 
 
 use_gui = False
