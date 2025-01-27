@@ -1040,7 +1040,7 @@ class ProcessManager:
         self.serial_manager = SerialManager(gui_queue = self.gui.gui_queue)
         self.interface = Interface(self.serial_manager)
 
-        #Working with circular dependencies. Serial manager needed the GUI for gui_queue first
+        #Working with circular dependencies. Serial manager needed the GUI for gui_queue first.
         if self.gui:
             self.gui.begin(self.futures_bridge, self.serial_manager, self.interface)
 
@@ -1140,9 +1140,7 @@ class GUI:
         self.status_label.config(text=message)
 
     def check_queue(self):
-        #I'm going to poll for the futures.done and futures.result from Serial Manager and Interface here since I'm short on time
-        #More optimally: Use callbacks
-        #I currently have only COM status in the GUI's queue. Other errors are shown directly. A bit here, a bit there.
+        #Polling for the futures.done and futures.result from the futures bridge
 
         try:
             while True:

@@ -865,7 +865,7 @@ bool useHeatingSimulation = true; //You don't always have an oven
 
 bool generalEmergency = false; //Critical error. Oven controll SSR will be off as long as this is on.
 
-//Object instance pointer (*) ready to be initialiozed andset up later
+//Object instance pointer (*) ready to be initialiozed and set up later
 Oven *oven1 = nullptr;
 SrLatchFrozenWatchdog *oven1SrLatchFrozenWatchdog = nullptr;
 
@@ -882,7 +882,7 @@ void setup() {
   //Oven SSR pin (int), absolute max temperature (float), goal temperature for oven (float), force oven to stay off? (bool), use the heating simulation? (bool)
   oven1 = new Oven(5, oven1AbsoluteMax);
   oven1SrLatchFrozenWatchdog = new SrLatchFrozenWatchdog(externalPwmHighPeriod, srLatchResetPin, srLatchOutputPin);
-  oven1SrLatchFrozenWatchdog->begin();
+  oven1SrLatchFrozenWatchdog->begin(); // -> is used instead of . for pointers.
 
   if(useOven1TemperatureSensor)
   {
