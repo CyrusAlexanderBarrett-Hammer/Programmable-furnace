@@ -952,7 +952,7 @@ class Interface:
             self.main_task.cancel()
 
     def start_setup_serial(self, port_name):
-        self.serial_manager.begin(port_name) #Needs an input field for COM number when button is clicked. Also, serial_manager.begin() needs value verifications.
+        self.serial_manager.begin(port_name) #serial_manager.begin() misses and needs value verifications.
         self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
         
     def stop_setup_serial(self):
@@ -966,10 +966,9 @@ class Interface:
                 connection_info = self.serial_manager.get_connection_info()
                 serial_loss = connection_info["serial_loss"]
                 if serial_loss:
-                    self.serial_connection_timer = None
                     #Will run while the rest of the code runs
                     if not self.setup_serial_task:
-                        self.start_setup_serial()
+                        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
                 
                 furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
                 self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
@@ -984,8 +983,9 @@ class Interface:
                 furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
                 self.furnace_overheat = True if furnace_overheat_result is not None else None
                 
-                if self.emergency_stop_active:
-                    self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding!
+                if not serial_loss:
+                    if self.emergency_stop_active:
+                        self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding!
                 
         except asyncio.CancelledError:
             print("Serial reading loop cancelled. Running cleanup.")
@@ -1073,8 +1073,6 @@ class ProcessManager:
 class GUI:
     #See comment in the interface class.
 
-    gui_update_interval = 100
-
     def __init__(self):
         self.futures_bridge = None
 
@@ -1083,15 +1081,28 @@ class GUI:
 
         self.interface = None #Interface depends on Serial Manager, and can't be set before
 
+        self.gui_update_interval = 100 #Ms
+        self.futures_poll_interval = 100 #Ms
+        #Links the name of the method called in a future (see FuturesBridge) and method handlers
+        self.futures_method_handlers = { 
+            "start_setup": self.handle_setup,
+            "pass_message": self.handle_pass_message,
+            "get_connection_info": self.handle_get_connection_info,
+            "serial_shutdown": self.handle_serial_shutdown
+        }
+
         self.lock = threading.Lock()
 
         self.root = tk.Tk()
-        self.root.title("Serial Communication GUI")
+        self.root.title("Interface")
         self.root.geometry("400x300")
         self.gui_queue = queue.Queue()
 
         self.begin_button = ttk.Button(self.root, text="Begin", command=self.start_serial)
         self.begin_button.pack(pady=10)
+
+        self.ping_button = ttk.Button(self.root, text="Send Ping", command=self.send_ping)
+        self.ping_button.pack(pady=10)
 
         self.label = ttk.Label(self.root, text="Serial Communication Active")
         self.label.pack(pady=20)
@@ -1108,7 +1119,7 @@ class GUI:
         # Start the update loop for real-time updates
         self.root.after(self.gui_update_interval, self.check_queue)
 
-    def begin(self, futures_bridge, serial_manager, interface):
+    def begin(self, futures_bridge, serial_manager, interface): #Called by the process manager, not from GUI.
         self.futures_bridge = futures_bridge
         
         self.serial_manager = serial_manager
@@ -1116,8 +1127,10 @@ class GUI:
 
         self.interface = interface
 
-    def start_setup_serial(self):
-        self.gui_thread_interface.start_setup_serial()
+    def start_setup(self):
+        self.serial_manager.begin(self.port)
+        self.serial_manager.setup_serial()
+        self.interface.run_main()
 
     def send_ping(self):
         # Schedule the coroutine in the event loop
