@@ -202,7 +202,6 @@ class StringMessageHandler:
 
         return parsed
 
-    #Level 2
     def encode_message(self, full_message):
         # Get the message type value
         message_value = self.messages[full_message.message_key]
@@ -231,7 +230,6 @@ class StringMessageHandler:
             full_message.timestamp = "NaN"
         return full_message
 
-    #Level 2
     def decode_message(self, parsed):
         # Try to find the message key based on category and message
         message_valid = False
@@ -383,7 +381,7 @@ class SerialConnectionManager:
         try:
             await self.close_connection()
         except:
-            print(f"Serial port is not initialized.") #Then there's no problem!
+            print(f"Serial port is not initialized.") #Then there's no problem! No need to raise.
         self.serial_port = None
 
     async def close_connection(self):
@@ -504,8 +502,8 @@ class SerialMessageHandler:
             if pull:
                 try:
                     await self.serial_message_handler.store_all_messages_async()
-                except (FileNotFoundError, PermissionError) as e:
-                    raise e
+                except (FileNotFoundError, PermissionError):
+                    raise
 
             found_message = self.find_message(message)
             if found_message is not None:
@@ -606,7 +604,7 @@ class SerialMessageHandler:
                 self.store_all_messages_async()
                 await asyncio.sleep(interval)
         except (FileNotFoundError, PermissionError) as e:
-            print(f"Serial readings failed: {e}")
+            print(f"Serial readings failed: {e}") #No reraise is intentional
         except asyncio.CancelledError:
             print("Serial reading loop cancelled.")
 
@@ -675,11 +673,11 @@ class SerialHandshakeHandler:
                 await asyncio.sleep(interval)
         except NoPingResponseTimeoutError as e:
             self.serial_connection_manager.update_for_serial_error(e)
-            print(f"Arduino didn't respond to ping for {no_response_timeout} seconds.")
+            print(f"Arduino didn't respond to ping for {no_response_timeout} seconds.") #No reraise is intentional
         except (FileNotFoundError, PermissionError) as e:
-            print(f"Ping failed: {e}")
+            print(f"Ping failed: {e}") #Same
         except asyncio.CancelledError: #Level 1
-            print("Ping loop cancelled.")
+            print("Ping loop cancelled.") #Same
 
     def start_ping_loop(self, interval=None, no_response_timeout = None):
         if interval is None:
@@ -695,7 +693,6 @@ class SerialHandshakeHandler:
 
 
 class SerialManager():
-    #See comment in interface class
     """
     Central manager for all serial communication functionalities.
     Encapsulates connection management, message handling, and handshake processes.
@@ -717,13 +714,16 @@ class SerialManager():
         self.serial_message_handler = None
         self.serial_handshake_handler = None
 
+        self.begin_run = False #Used to check if this classes's instantiatable managers and handlers' methods are ready to be used
+
         self.messages = {}
         self.valid_messages = ""
 
         self.lock = asyncio.Lock()
 
 
-    async def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
+    #this method misses and needs value verifications.
+    def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
         self.port_name = port_name
         self.baud_rate = baud_rate
         self.timeout = serial_reading_timeout
@@ -735,17 +735,20 @@ class SerialManager():
         self.no_ping_respone_timeout = self.no_ping_respone_timeout
 
         try:
-            #Input from GUI or unimplemented Labview starts serial processes when values like the COM port is known.
+            #Input from GUI or unimplemented Labview starts serial processes only when values like the COM port is known.
+            #Instantiate managers and handlers
             self.string_message_handler = StringMessageHandler(self.messages)
             self.serial_connection_manager = SerialConnectionManager(self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
             self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager, self.string_message_handler)
             self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
-        except (ValueError, TypeError, KeyError): #This is an entry point, but copy-pasting 50 lines of code is avoided.
+        except (ValueError, TypeError, KeyError): #This is an entry point, I know, but copy-pasting 50 lines of code is avoided.
             raise
         
         #If the serial part of this system was a library, these should really be set in serial manager as a class attribute
         self.messages = self.string_mesage_handler.messages
         self.valid_messages = self.string_message_handler.valid_messages
+        
+        self.begin_run = True
 
     async def setup_serial(self):
         try:
@@ -765,6 +768,9 @@ class SerialManager():
             raise
 
     async def pass_message_async(self, message, value=None, timestamp=None):
+        if self.get_connection_info["serial_loos"]:
+            raise ValueError("No serial connection, can't send message")
+
         if not isinstance(message, str):
                 raise TypeError("Message is not a string")
         if message not in self.messages.keys():
@@ -898,13 +904,6 @@ class FuturesBridge:
 class Interface:
 
     def __init__(self, serial_manager):
-        # Direct method calls are used instead of a GUI queue like in the SerialManager.
-        # Using a queue system or a thread-safe data structure would likely be more optimal for both.
-        # A queue system requires centralized handling since queues operate on a FIFO basis.
-        # Currently, a queue is used for the GUI because it simplifies communication to a single destination.
-        # Moving queue initialization to the process manager level could centralize storage and resolve circular dependencies 
-        # (e.g., the GUI needing to be instantiated before the SerialManager).
-        # A unified queue could handle all updates (GUI, status, etc.), sorted into a dictionary by a high-level process.
 
         self.serial_manager = serial_manager
 
@@ -919,9 +918,6 @@ class Interface:
         self.furnace_overheat = False
 
         self.furnace_temperature = None
-
-        if not isinstance(self.serial_manager, SerialManager):
-            raise TypeError(f"serial_manager needs to be a SerialManager object, got {type(self.serial_manager).__name__}")
 
 
     def begin(self):
@@ -952,8 +948,7 @@ class Interface:
             self.main_task.cancel()
 
     def start_setup_serial(self, port_name):
-        self.serial_manager.begin(port_name) #serial_manager.begin() misses and needs value verifications.
-        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial(port_name))
         
     def stop_setup_serial(self):
         # Cancel the serial reading loop task if it's running
@@ -968,7 +963,10 @@ class Interface:
                 if serial_loss:
                     #Will run while the rest of the code runs
                     if not self.setup_serial_task:
-                        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+                        try:
+                            self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+                        except Exception as e:
+                            print(f"Could not connect to serial: {e}") #If fail, that's OK, try again next round. GUI is updated.
                 
                 furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
                 self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
@@ -985,7 +983,7 @@ class Interface:
                 
                 if not serial_loss:
                     if self.emergency_stop_active:
-                        self.serial_manager.pass_message_async("force_emergency_stop") #Hard-coding!
+                        self.serial_manager.pass_message_async("force_emergency_stop")
                 
         except asyncio.CancelledError:
             print("Serial reading loop cancelled. Running cleanup.")
@@ -993,7 +991,6 @@ class Interface:
 
 
 class ProcessManager:
-    #See comment in interface class
     """
     Encapsulates overall procedures for managing processes
     """
@@ -1033,7 +1030,7 @@ class ProcessManager:
         else:
             print("Starting system without GUI")
         
-        #Used by any top-level class like GUI or Labview functions to interact with coroutines
+        #Used by any top-level class like GUI or unimplemented Labview functions to interact with coroutines
         self.futures_bridge = FuturesBridge(self.loop)
 
         #Instanciate async components
@@ -1071,19 +1068,26 @@ class ProcessManager:
 
 
 class GUI:
-    #See comment in the interface class.
+    #Nothing here can be async or blocking, as it will block the GUI. Hence, FuturesBridge for sync to async bridging.
+
+    #See comments in FuturesBridge for how the GUI works with futures
 
     def __init__(self):
         self.futures_bridge = None
 
-        self.serial_manager = None #Working around circular dependencies. Will be set to SerialManager by shared reference after GUI's instanciation.
+        #Working around circular dependencies. They can't be instanciated before SerialManager is, but SerialManager must be instanciated by the GUI to gve a COM port
+        self.serial_manager = None #Will be set to SerialManager by shared reference after GUI's instanciation.
         self.serial_handshake_handler = None
 
-        self.interface = None #Interface depends on Serial Manager, and can't be set before
+        self.interface = None #Interface depends on Serial Manager, and can't be set before SerialManager is started with SerialManager.begin()
 
-        self.gui_update_interval = 100 #Ms
+        self.action_loop_interval = 100 #Ms
+        self.gui_queue_poll_interval = 100 #Ms
         self.futures_poll_interval = 100 #Ms
-        #Links the name of the method called in a future (see FuturesBridge) and method handlers
+
+        # self.setup_running = True #The setup procedure needs to run an async coroutine and then a normal method, in order, without blocking the GUI. Using continous checks via action_loop.
+
+        #Links the name of the method called in a future (see FuturesBridge) and coroutine handlers. Normal methods can be handled locally.
         self.futures_method_handlers = { 
             "start_setup": self.handle_setup,
             "pass_message": self.handle_pass_message,
@@ -1096,16 +1100,13 @@ class GUI:
         self.root = tk.Tk()
         self.root.title("Interface")
         self.root.geometry("400x300")
-        self.gui_queue = queue.Queue()
+        self.gui_queue = queue.Queue() #Updates sent directly to GUI from elsewhere. Should really have been instanciated in the ProcessManager for more elegant code.
 
-        self.begin_button = ttk.Button(self.root, text="Begin", command=self.start_serial)
+        self.begin_button = ttk.Button(self.root, text="Begin", command=self.on_start_setup)
         self.begin_button.pack(pady=10)
 
-        self.ping_button = ttk.Button(self.root, text="Send Ping", command=self.send_ping)
-        self.ping_button.pack(pady=10)
-
-        self.label = ttk.Label(self.root, text="Serial Communication Active")
-        self.label.pack(pady=20)
+        self.serial_info = ttk.Label(self.root, text="Serial Communication Inactive")
+        self.serial_info.pack(pady=20)
 
         self.ping_button = ttk.Button(self.root, text="Send Ping", command=self.send_ping)
         self.ping_button.pack(pady=10)
@@ -1116,8 +1117,12 @@ class GUI:
         self.retry_button = ttk.Button(self.root, text="Retry Connection", command=self.retry_connection)
         self.retry_button.pack(pady=10)
 
-        # Start the update loop for real-time updates
-        self.root.after(self.gui_update_interval, self.check_queue)
+        #Loop for any non-message actions that must be run periodicly
+        self.root.after(self.action_loop_interval, self.action_loop) #tk.after works with tkinter GUIs, and starts the given method after timeout
+
+        # Start the futures polling and GUI-queue update loops for real-time updates. 
+        self.root.after(self.futures_poll_interval, self.poll_bridge)
+        self.root.after(self.gui_queue_poll_interval, self.poll_gui_queue)
 
     def begin(self, futures_bridge, serial_manager, interface): #Called by the process manager, not from GUI.
         self.futures_bridge = futures_bridge
@@ -1127,10 +1132,19 @@ class GUI:
 
         self.interface = interface
 
-    def start_setup(self):
-        self.serial_manager.begin(self.port)
-        self.serial_manager.setup_serial()
-        self.interface.run_main()
+    def on_start_setup(self):
+        """
+        Procedure for setting up serial, and then starting Interface via it's start_main method. Gets the engines running.
+        """
+
+        try:
+            self.serial_manager.begin(self.port)
+        except Exception as e:
+            pass
+            #Update info to general errors here
+        #Where's the SerialManager.setup_serial() call? It will be called by Interface.start_main() when it detects seriel loss.
+        #It's clumsy but simpler, because we don't need to continously and non-blockingly keep track of when the async coroutine is done before moving on here
+        self.interface.start_main()
 
     def send_ping(self):
         # Schedule the coroutine in the event loop
@@ -1152,9 +1166,31 @@ class GUI:
         # Thread-safe update of the status label
         self.status_label.config(text=message)
 
-    def check_queue(self):
-        #Polling for the futures.done and futures.result from the futures bridge
 
+    def action_loop(self):
+        """
+        Anything periodic not directly related to GUI info goes here
+        """
+        pass
+
+
+    def poll_bridge(self):
+        """
+        Polls for the futures.done and futures.result from the futures bridge, and runs the correct handler for the async coroutine completed.
+        """
+
+        futures_metadata = self.bridge.poll_futures()
+        for method_name, params, return_data, exception in futures_metadata:
+            #Gets and runs correct handler
+            handler = self.method_handlers.get(method_name, self.default_handler)
+            handler(method_name, params, return_data, exception) #method_name and params info gives flexibility, though rarely used. Remove from GUI and FuturesBridge?
+
+        self.master.after(self.futures_poll_interval, self.poll_bridge)
+
+    def poll_gui_queue(self):
+        """
+        Polls for updates to the GUI queue, directly from anywhere that has access to self.gui_queue
+        """
         try:
             while True:
                 message = self.gui_queue.get_nowait()
@@ -1162,7 +1198,7 @@ class GUI:
         except queue.Empty:
             pass
         # Schedule the next check
-        self.root.after(100, self.check_queue)
+        self.root.after(self.gui_queue_poll_interval, self.poll_gui_queue)
 
     def run(self):
         self.root.mainloop()
