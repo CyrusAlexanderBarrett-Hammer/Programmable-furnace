@@ -12,10 +12,15 @@ class Timer
   private:
     unsigned long durationMs;
     unsigned long startTime;
+
+    void startTimer()
+    {
+      startTime = millis();
+    }
   
   public:
     // Constructor with an additional parameter to start as timed out
-    Timer(unsigned long _durationMs = 0, bool _startTimedOut = false)
+    Timer(unsigned long _durationMs, bool _startTimedOut = false)
       : durationMs(_durationMs)
     {
         if (_startTimedOut) {
@@ -24,11 +29,6 @@ class Timer
         } else {
             startTimer(); // Start the timer normally
         }
-    }
-
-    void startTimer()
-    {
-      startTime = millis();
     }
 
     void resetTimer()
@@ -90,7 +90,7 @@ class Max31856FaultHandler
 
   public:
     Max31856FaultHandler(uint8_t _maxCS) //Constructor for setting values
-            : maxCS(_maxCS), recheckReadingTimer(sensorMeasurementTime, true) {} //Initializing the instance in the constructor
+            : maxCS(_maxCS), recheckReadingTimer(sensorMeasurementTime) {} //Initializing the instance in the constructor
 
     void resetThermosensor(){
       digitalWrite(maxCS, LOW);  // Select the MAX31856 via chip select
@@ -101,50 +101,61 @@ class Max31856FaultHandler
       digitalWrite(maxCS, HIGH);  // Deselect the MAX31856 via chip select
     }
 
-    FailStates handlePotentialFault(float temperatureReading)
+  FailStates handlePotentialFault(float temperatureReading)
+  {
+    if (recheckReadingTimer.timedOut())
     {
-      if (recheckReadingTimer.timedOut())
+      temperatureNew = temperatureReading;
+      recheckReadingTimer.resetTimer();
+      if (isnan(temperatureReference)) 
       {
-          temperatureNew = temperatureReading;
-          recheckReadingTimer.resetTimer();
-
-          bool faultDetected = (!isnan(temperatureReference) && temperatureNew == temperatureReference) || isnan(temperatureNew);
-
-          if (faultDetected)
-          {
-              resetThermosensor();
-
-              if (overrideUpdateFail)
-              {
-                  overrideUpdateFail = false;
-                  return FailStates::Unknown; // Instead of returning true, return a FailState
-              }
-
-              overrideUpdateFail = true;
-              failCount++;
-          }
-          else
-          {
-              failCount = 0;
-          }
-
-          temperatureReference = temperatureNew;
-      }
-
-      if (failCount >= maxFailAttempts)
-      {
-          return FailStates::Unsuccessful; // Failed permanently
-      }
-      else if (failCount > 0)
-      {
-          return FailStates::Unknown; // We do not yet know if the sensor failed permanently
+        if (isnan(temperatureNew))
+        {
+            failCount = maxFailAttempts;
+        }
+        else
+        {
+            temperatureReference = temperatureNew;
+            failCount = 0;
+            return FailStates::Successful;
+        }
       }
       else
       {
-          return FailStates::Successful; // No fail yet
+        bool faultDetected = (!isnan(temperatureReference) && temperatureNew == temperatureReference) || isnan(temperatureNew);
+        if (faultDetected)
+        {
+            resetThermosensor();
+            if (overrideUpdateFail)
+            {
+                overrideUpdateFail = false;
+                return FailStates::Unknown;
+            }
+            overrideUpdateFail = true;
+            failCount++;
+        }
+        else
+        {
+            failCount = 0;
+            temperatureReference = temperatureNew;
+        }
       }
     }
 
+    // --- 4) DETERMINE FINAL RETURN VALUE ------------------------------------
+    if (failCount >= maxFailAttempts)
+    {
+        return FailStates::Unsuccessful; //Failed permanently
+    }
+    else if (failCount > 0)
+    {
+        return FailStates::Unknown; //Not sure yet
+    }
+    else
+    {
+        return FailStates::Successful; //Normal operation
+    }
+  }
 };
 
 class OvenOverheatWatchdog
@@ -153,13 +164,13 @@ class OvenOverheatWatchdog
     float maxTemp;
   
   public:
-    bool ovenOverheat;
+    bool ovenOverheat = false;
 
     OvenOverheatWatchdog(float _maxTemp)
         : maxTemp(_maxTemp)
         {}
 
-    void check_overheat(float currentTemperature, bool temperatureSensorFailAlarm)
+    void checkOverheat(float currentTemperature, bool temperatureSensorFailAlarm = false)
     {
       //If temperatureSensorFailAlarm is on, the high temperature of 2023 degrees (Labview sensor fail standard) is because of thermocouple fail, not overheat
       //We can't know if there's overheat if the sensor isn't working anyway, and no thermocouples or thermosensors can measure 2023 degrees or higher
@@ -180,12 +191,7 @@ class SrLatchFrozenWatchdog
   
     Timer srLatchLowTimer;
   
-    bool resetSrLatch = true;
-  
     bool srLatchOutputStatus;
-  
-    int failCount = 0;
-    int maxFailAttempts = 3;
 
   public:
     bool srLatchFrozen = false;
@@ -197,44 +203,33 @@ class SrLatchFrozenWatchdog
     void begin()
     {
       pinMode(srLatchResetPin, OUTPUT);
-      pinMode(srLatchOutputPin, OUTPUT);
+      pinMode(srLatchOutputPin, INPUT);
     }
 
     void checkSrLatchFrozen()
     {
-      if(resetSrLatch)
-      {
-        digitalWrite(srLatchResetPin, HIGH); //Latch will go to low, and will go to high again if it's set pin is set to high (pulsed) by external signal
-      }
-
-      //Pulsed high, everything in order
       srLatchOutputStatus = digitalRead(srLatchOutputPin);
-      if(srLatchOutputStatus == true)
+
+      if(srLatchOutputStatus)
       {
+        //Latch got set, everything in order
         srLatchLowTimer.resetTimer();
-        resetSrLatch = true;
+        digitalWrite(srLatchResetPin, HIGH); //Latch will go to low, and will go to high again if it's set pin is set to high (pulsed) by external signal
         return;
       }
 
-      if(!srLatchLowTimer.timedOut())
+      else if(srLatchLowTimer.timedOut())
       {
-        //Keep giving a chance ready for next time
-        resetSrLatch = false;
-        return;
-      }
-
-      //At this stage, the SR latch has not gone to high
-      resetSrLatch = true;
-      failCount += 1;
-
-      if(!failCount >= maxFailAttempts)
-      {
-        return;
-      }
-      else
-      {
+        //At this stage, the SR latch has not gone to high
         //Watchdog barks
         srLatchFrozen = true;
+        return;
+      }
+
+      else
+      {
+        //Keep giving a chance ready for next time
+        return;
       }
     }
 
@@ -252,6 +247,7 @@ class Max31856Sensor
     Max31856FaultHandler max31856FaultHandler;
 
   public:
+    float currentTemp;
     bool temperatureSensorFailAlarm = false;
 
     Max31856Sensor(uint8_t _maxCS, uint8_t _tcType = 3) //Constructor for setting values
@@ -274,11 +270,10 @@ class Max31856Sensor
 
     float readTemperature()
     {
-      float currentTemp;
-
-      if (temperatureSensorFailAlarm == false)
+      if (!temperatureSensorFailAlarm)
       {
         float currentTempReference = maxSensor.readThermocoupleTemperature();
+
         FailStates temperatureSensorFailStatus = max31856FaultHandler.handlePotentialFault(currentTempReference); //Alarm goes on if sensor is confirmed failed.
 
         if(temperatureSensorFailStatus == FailStates::Successful)
@@ -291,14 +286,14 @@ class Max31856Sensor
           temperatureSensorFailAlarm = true;
         }
 
-        //If unknown, don't update
-        
+        //If unknown, don't update temperature
         return currentTemp;
       }
 
       else
       {
-        return 2023.f; //Labview standard thermosensor error temperature, as per request from Terje
+        currentTemp = 2023;
+        return 2023; //Labview standard thermosensor error temperature, as per request from Terje
       }
 
     }
@@ -346,11 +341,13 @@ struct Oven
     void turnOvenControllPinOn()
     {
       digitalWrite(ovenControllPin, HIGH);
+      heatingOn = false;
     }
   
     void turnOvenControllPinOff()
     {
       digitalWrite(ovenControllPin, LOW);
+      heatingOn = false;
     }
   
     //If setup configurations are implemented to be set from Python on PC, make methods here to change the values like pin number, max temperature, temperature goal, etc (see "signals" in the documentation)
@@ -412,7 +409,7 @@ namespace Messages{
   static const MessageStruct EMERGENCY_ALARM = {'9', '0'}; //Sent to PC
   static const MessageStruct THERMOSENSOR_ERROR = {'9', '1'}; //Sent to PC
   static const MessageStruct WATCHDOG_SR_LATCH_FROZEN = {'9', '2'}; //Sent to PC. The oven heating signal is stuck to high.
-  static const MessageStruct OVEN_OVERHEAT = {'2', '1'}; //Sent to PC
+  static const MessageStruct OVEN_OVERHEAT = {'9', '3'}; //Sent to PC
 
   //Allows iteration by using pointers to Messages' memory addresses, unlike iterating over their structs directly
   const MessageStruct* messagePointers[] = {
@@ -435,7 +432,9 @@ namespace MessageTimeouts {
   // Instantiate Timer for each message with specific timeout durations
   //What about PING_ARDUINO_PC_TIMER? It has no timeout since it responds once on ping from PC.
   //FORCE_EMERGENCY_STOP is sent from Python on the computer, so the timeout is handled there
-  static Timer TEMPERATURE_READING(1500, true); //Milliseconds
+  
+  //All in milliseconds
+  static Timer TEMPERATURE_READING(1500, true);
   static Timer EMERGENCY_ALARM(1000, true); //Milliseconds
   static Timer THERMOSENSOR_ERROR(1000, true); //Milliseconds
   static Timer WATCHDOG_SR_LATCH_FROZEN(1000, true); //Milliseconds
@@ -573,7 +572,7 @@ class StringMessageHandler
         float messageValue;
         String messageValueString = message.substring(commaIndexes[1] + 1, commaIndexes[2]);
         if(messageValueString != "NaN"){
-          messageValue = atof(messageValueString.c_str());
+          messageValue = atof(messageValueString.c_str()); //String to float
           parsed.value = messageValue;
         }
         else{
@@ -677,7 +676,7 @@ class SerialMessageHandler
 
   public:
     static SerialMessageHandler& getInstance() {
-        static SerialMessageHandler instance; // Created on first use
+        static SerialMessageHandler instance;
         return instance;
     }
 
@@ -764,7 +763,7 @@ class SerialHandshakeHandler
     SerialHandshakeHandler& operator=(const SerialHandshakeHandler&) = delete;
 
   private:
-    unsigned long pingReceivedTimeout = 15 * 1000;
+    unsigned long pingReceivedTimeout = 15000;
     Timer pingReceivedTimer;
 
     // Private constructor to prevent instantiation
@@ -848,12 +847,12 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 int oven1ControllPin = 7; //Controll pin for the oven SSR.
 float oven1AbsoluteMax = 50;
 
-unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high.
+unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high. Slightly above actual intervals.
 int srLatchResetPin = 4;
-int srLatchOutputPin = 5;
+int srLatchOutputPin = 6;
 
 bool useOven1TemperatureSensor = true;
-int oven1TemperatureSensorCSPin = 10; //CS = Chip Select. Does not need to be correct if not using temperature sensor.
+int oven1TemperatureSensorCSPin = SS; //CS = Chip Select. Does not need to be correct if not using temperature sensor.
 
 //Dev settings
 bool heatingOverride = false; //Oven might be connected and on, but you don't want the Arduino to controll it
@@ -879,6 +878,7 @@ SerialHandshakeHandler &serialHandshakeHandler = SerialHandshakeHandler::getInst
 
 
 void setup() {
+
   //Oven SSR pin (int), absolute max temperature (float), goal temperature for oven (float), force oven to stay off? (bool), use the heating simulation? (bool)
   oven1 = new Oven(5, oven1AbsoluteMax);
   oven1SrLatchFrozenWatchdog = new SrLatchFrozenWatchdog(externalPwmHighPeriod, srLatchResetPin, srLatchOutputPin);
@@ -896,40 +896,31 @@ void setup() {
 }
 
 void loop() {
-
   ParsedMessageStruct message = serialMessageHandler.getMessage();
 
   serialHandshakeHandler.handleHandshake(message);
 
   if(useOven1TemperatureSensor)
   {
-    {
-      if(!oven1TemperatureSensor->temperatureSensorFailAlarm)
-      {
-        oven1->currentTemp = oven1TemperatureSensor->readTemperature();
-      }
-    }
-
-    if(!oven1TemperatureSensor->temperatureSensorFailAlarm)
-    {
-      if(!isnan(oven1->currentTemp) && serialConnectionManager.serialConnection)
-      {
-        if(MessageTimeouts::TEMPERATURE_READING.timedOut())
-        {
-          serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1->currentTemp);
-          MessageTimeouts::TEMPERATURE_READING.resetTimer();
-        }
-      }
-    }
-    else
+    oven1->currentTemp = oven1TemperatureSensor->readTemperature();
+    if(oven1TemperatureSensor->temperatureSensorFailAlarm)
     {
       generalEmergency = true;
+    }
+
+    if(serialConnectionManager.serialConnection)
+    {
+      if(MessageTimeouts::TEMPERATURE_READING.timedOut())
+      {
+        serialMessageHandler.passMessage(Messages::TEMPERATURE_READING, oven1->currentTemp);
+        MessageTimeouts::TEMPERATURE_READING.resetTimer();
+      }
     }
   }
 
   if(useOven1TemperatureSensor && !oven1OverheatWatchdog->ovenOverheat)
   {
-    oven1OverheatWatchdog->check_overheat(oven1->currentTemp, oven1TemperatureSensor->temperatureSensorFailAlarm);
+    oven1OverheatWatchdog->checkOverheat(oven1->currentTemp, oven1TemperatureSensor->temperatureSensorFailAlarm);
   }
   if(!oven1SrLatchFrozenWatchdog->srLatchFrozen)
   {
