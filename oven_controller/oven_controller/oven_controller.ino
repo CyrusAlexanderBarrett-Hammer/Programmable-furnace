@@ -142,7 +142,6 @@ class Max31856FaultHandler
       }
     }
 
-    // --- 4) DETERMINE FINAL RETURN VALUE ------------------------------------
     if (failCount >= maxFailAttempts)
     {
         return FailStates::Unsuccessful; //Failed permanently
@@ -845,7 +844,7 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 
 //User settings
 int oven1ControllPin = 7; //Controll pin for the oven SSR.
-float oven1AbsoluteMax = 50;
+float oven1AbsoluteMax = 200;
 
 unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high. Slightly above actual intervals.
 int srLatchResetPin = 4;
@@ -880,7 +879,7 @@ SerialHandshakeHandler &serialHandshakeHandler = SerialHandshakeHandler::getInst
 void setup() {
 
   //Oven SSR pin (int), absolute max temperature (float), goal temperature for oven (float), force oven to stay off? (bool), use the heating simulation? (bool)
-  oven1 = new Oven(5, oven1AbsoluteMax);
+  oven1 = new Oven(oven1ControllPin, oven1AbsoluteMax);
   oven1SrLatchFrozenWatchdog = new SrLatchFrozenWatchdog(externalPwmHighPeriod, srLatchResetPin, srLatchOutputPin);
   oven1SrLatchFrozenWatchdog->begin(); // -> is used instead of . for pointers.
 
@@ -947,6 +946,11 @@ void loop() {
       oven1OverheatWatchdog->ovenOverheat,
       oven1SrLatchFrozenWatchdog->srLatchFrozen
     );
+  }
+
+  if(message.message == &Messages::FORCE_EMERGENCY_SHUTDOWN)
+  {
+    generealEmergency = true;
   }
 }
 

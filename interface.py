@@ -419,6 +419,11 @@ class SerialMessageHandler:
 
         if not isinstance(self.serial_readings_interval, (int, float)):
             raise TypeError(f"serial_readings_interval must be an int or float, got {type(self.serial_readings_interval).__name__}")
+        
+        self.message_send_timeouts = {
+            "ping_pc_arduino": TimeManager.Timer(5000),
+            "force_emergency_stop": TimeManager.Timer(1000)
+        }
     
     def get_receieved_messages(self):
         return self.received_message_buffer
@@ -731,7 +736,7 @@ class SerialManager():
             raise
 
     async def pass_message_async(self, message, value=None, timestamp=None):
-        if self.get_connection_info["serial_loos"]:
+        if self.get_connection_info["serial_loss"]:
             raise ValueError("No serial connection, can't send message")
 
         if not isinstance(message, str):
@@ -873,8 +878,6 @@ class Interface:
         self.main_task = None
         self.setup_serial_task = None
 
-        self.emergency_stop_active = False
-
         #Arduino alarm statuses
         self.thermosensor_error = False
         self.watchdog_pwm_frozen = False
@@ -897,9 +900,6 @@ class Interface:
     
     def get_furnace_overheat_status(self):
         return self.furnace_overheat
-
-    def send_emergency_stop(self):
-        self.emergency_stop_active = True
 
 
     def start_main(self):
@@ -943,10 +943,6 @@ class Interface:
 
                 furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
                 self.furnace_overheat = True if furnace_overheat_result is not None else None
-                
-                if not serial_loss:
-                    if self.emergency_stop_active:
-                        self.serial_manager.pass_message_async("force_emergency_stop")
                 
         except asyncio.CancelledError:
             print("Serial reading loop cancelled. Running cleanup.")
