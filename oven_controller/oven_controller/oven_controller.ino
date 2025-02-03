@@ -844,7 +844,7 @@ float tempSimulation(bool heatingOn, float currentTemp, SimulationData &simulati
 
 //User settings
 int oven1ControllPin = 7; //Controll pin for the oven SSR.
-float oven1AbsoluteMax = 200;
+float oven1AbsoluteMax = 300;
 
 unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high. Slightly above actual intervals.
 int srLatchResetPin = 4;
@@ -948,9 +948,9 @@ void loop() {
     );
   }
 
-  if(message.message == &Messages::FORCE_EMERGENCY_SHUTDOWN)
+  if(message.message == &Messages::FORCE_EMERGENCY_STOP)
   {
-    generealEmergency = true;
+    generalEmergency = true;
   }
 }
 
