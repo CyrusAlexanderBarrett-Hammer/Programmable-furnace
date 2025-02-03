@@ -1,5 +1,3 @@
-#FOLLOW THIS CYNICALLY, WITHOUT DEVIATIONS. IF YOU SEE OTHER PROBLEMS IN THE CODE, WRITE DOWN THE PROBLEMATIC METHOD IN A NOTEPAD, AND MOVE ON! REMOVE ALL TRY/EXCEPTS AND RAISE THAT CAN'T DO ANYTHING ABOUT THE PROBLEM, DON'T RERAISE DUE TO FAILED RECOVERY, OR ARE'NT VERY ESSENTIAL FOR LOGGING, FROM TOP TO BOTTOM, WITHOUT FOLLOWING THE METHOD CALLS. REMOVE ALL LEVEL COMMENTS EXCEPT FROM LEVEL 1. MAP ALL LEVEL 1, FROM TOP TO BOTTOM, WITHOUT FOLLOWING THE METHOD CALLS. REPLACE EVERY EXCEPTION TYPE WHERE SENSIBLE, IF IT'S RERAISE OR NOT, WITH CUSTOM EXCEPTIONS, FROM TOP TO BOTTOM, WITHOUT FOLLOWING THE METHOD CALLS. TRACK EVERY EXCEPTION TYPE, IF IT'S RERAISE OR NOT, TO WRITE WHERE THEY END UP IN OTHER TRY/EXCEPTS, FROM TOP TO BOTTOM, WITHOUT FOLLOWING THE METHOD CALLS. CHECK WHERE I GET DUPLICATE EXCEPTION TYPES AND REPLACE WITH CUSTOM EXCEPTIONS, FROM TOP TO BOTTOM, WITHOUT FOLLOWING THE METHOD CALLS.
-
 import re
 import time
 from datetime import datetime
@@ -405,9 +403,8 @@ class SerialConnectionManager:
 
 class SerialMessageHandler:
 
-    def __init__(self, serial_connection_manager, string_message_handler, serial_readings_interval = 0.2):
+    def __init__(self, serial_connection_manager, serial_readings_interval = 0.2):
         self.serial_connection_manager = serial_connection_manager
-        self.string_message_handler = string_message_handler
 
         self.serial_readings_interval = serial_readings_interval
 
@@ -429,8 +426,8 @@ class SerialMessageHandler:
         return self.received_message_buffer
 
     def find_message(self, message, purge = False):
-        if message not in self.string_message_handler.messages.keys():
-            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}")
+        if message not in StringMessageHandler.messages.keys():
+            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {StringMessageHandler.valid_messages}")
         for i in self.received_message_buffer:
             if i.message_key == message:
                 self.received_message_buffer.pop(self.received_message_buffer.index(i))
@@ -460,7 +457,7 @@ class SerialMessageHandler:
         Parameters:
             message: The message to find.
             timeout: The maximum time to search for the message (in seconds).
-            pull: If True, stores all messages from the buffer during each iteration.
+            pull: If True, stores all messages from the buffer before searching.
 
         Returns:
             The found message, or None if not found within the timeout.
@@ -492,15 +489,15 @@ class SerialMessageHandler:
         if not isinstance(message, str):
                 raise TypeError("Message is not a string") #Level 1
 
-        if message not in self.string_message_handler.messages.keys():
-            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
+        if message not in StringMessageHandler.messages.keys():
+            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {StringMessageHandler.valid_messages}") #Level 1
 
         if not isinstance(timestamp, (datetime, type(None))):
             raise InvalidTimestampTypeError(f"Timestamp is of type {type(timestamp).__name__}; expected datetime or None") #Level 1
 
-        full_message = self.string_message_handler.FullMessage(message, value, timestamp)
-        encoded_message = self.string_message_handler.encode_message(full_message)
-        built_message = self.string_message_handler.build_message(encoded_message)
+        full_message = StringMessageHandler.FullMessage(message, value, timestamp)
+        encoded_message = StringMessageHandler.encode_message(full_message)
+        built_message = StringMessageHandler.build_message(encoded_message)
 
         try:
             await self.send_message_async(built_message)
@@ -514,8 +511,8 @@ class SerialMessageHandler:
         except Exception as e:
             print(f"Error receiving message: {e}")
             raise
-        parsed = self.string_message_handler.parse_message(message_str)
-        decoded_message = self.string_message_handler.decode_message(parsed)
+        parsed = StringMessageHandler.parse_message(message_str)
+        decoded_message = StringMessageHandler.decode_message(parsed)
         return decoded_message
 
     async def send_message_async(self, message):
@@ -578,13 +575,10 @@ class SerialMessageHandler:
 
 class SerialHandshakeHandler:
 
-    def __init__(self, serial_connection_manager, serial_message_handler, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
+    def __init__(self, serial_connection_manager, serial_message_handler, ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15, gui_queue=None):
         self.serial_message_handler = serial_message_handler
-        self.string_message_handler = self.serial_message_handler.string_message_handler
         self.serial_connection_manager = serial_connection_manager
 
-        self.handshake_message = handshake_message
-        self.handshake_response = handshake_response
         self.ping_interval= ping_interval
         self.ping_timeout = ping_timeout
         self.no_ping_response_timeout = no_ping_response_timeout
@@ -595,28 +589,17 @@ class SerialHandshakeHandler:
 
         self.lock = asyncio.Lock()
 
-        if not type(self.handshake_message) is str:
-            raise TypeError(f"handshake_message must be a string, got {type(self.handshake_message).__name__}")
-        elif not self.handshake_message in self.string_message_handler.messages.keys():
-            raise KeyError(f"handshake_message message type '{self.handshake_message}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
-        elif not type(self.handshake_response) is str:
-            raise TypeError(f"handshake_response must be a string, got {type(self.handshake_response).__name__}")
-        elif not self.handshake_response in self.string_message_handler.messages.keys():
-            raise KeyError(f"handshake_response message type '{self.handshake_response}' does not exist. Valid messages are: {self.string_message_handler.valid_messages}") #Level 1
-
     async def ping_handshake(self):
         # Perform the handshake asynchronously
         try:
-            await self.serial_message_handler.pass_message_async(self.handshake_message)
+            await self.serial_message_handler.pass_message_async("ping_pc_arduino")
             print("Sent handshake ping.")
         except Exception as e:
             print(f"Error during ping handshake: {e}")
             raise
-
-        timer = TimeManager.Timer(self.ping_timeout * 1000)
         
         try:
-            response = await self.serial_message_handler.find_message_with_blocking_timeout(timer, self.ping_timeout, pull = True)
+            response = await self.serial_message_handler.find_message_with_blocking_timeout("ping_arduino_pc", self.ping_timeout, pull = True)
         except Exception as e:
             print(f"Error during ping handshake: {e}")
             raise
@@ -673,11 +656,8 @@ class SerialManager():
         self.baud_rate = 0
         self.timeout = 0
         self.serial_readings_interval = 0
-        self.handshake_message = ""
-        self.handshake_response = ""
         self.ping_interval = 0
 
-        self.string_message_handler = None
         self.serial_connection_manager = None
         self.serial_message_handler = None
         self.serial_handshake_handler = None
@@ -691,30 +671,29 @@ class SerialManager():
 
 
     #this method misses and needs value verifications.
-    def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, handshake_message="ping_pc_arduino", handshake_response = "ping_arduino_pc", ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
+    def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
         self.port_name = port_name
         self.baud_rate = baud_rate
         self.timeout = serial_reading_timeout
         self.serial_readings_interval = serial_readings_interval
-        self.handshake_message = handshake_message
-        self.handshake_response = handshake_response
         self.ping_interval = ping_interval
         self.ping_timeout = ping_timeout
-        self.no_ping_respone_timeout = self.no_ping_respone_timeout
+        self.no_ping_respone_timeout = no_ping_response_timeout
 
         try:
             #Input from GUI or unimplemented Labview starts serial processes only when values like the COM port is known.
             #Instantiate managers and handlers
-            self.string_message_handler = StringMessageHandler(self.messages)
+
+            #Where's StringMessageHandler? It does not need instanciation.
             self.serial_connection_manager = SerialConnectionManager(self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
-            self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager, self.string_message_handler)
-            self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.handshake_message, self.handshake_response, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
+            self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager)
+            self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
         except (ValueError, TypeError, KeyError): #This is an entry point, I know, but copy-pasting 50 lines of code is avoided.
             raise
         
         #If the serial part of this system was a library, these should really be set in serial manager as a class attribute
-        self.messages = self.string_mesage_handler.messages
-        self.valid_messages = self.string_message_handler.valid_messages
+        self.messages = StringMessageHandler.messages
+        self.valid_messages = StringMessageHandler.valid_messages
         
         self.begin_run = True
 
@@ -726,13 +705,6 @@ class SerialManager():
             print("Setup cancelled.")
         except Exception as e:
             print("Setup failed.")
-            raise
-
-    async def attempt_reconnect(self):
-        try:
-            await self.setup_serial()
-        except:
-            print("Reconnection attempt failed.")
             raise
 
     async def pass_message_async(self, message, value=None, timestamp=None):
