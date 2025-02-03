@@ -823,7 +823,7 @@ class FuturesBridge:
 
                     #Test for exceptions
                     try:
-                        return_data = fut.result()
+                        return_data = fut.result() #Grayed out! It's just provoking an exception, anyway.
                     except Exception as e:
                         metadata["exception"] = e
 
@@ -858,8 +858,18 @@ class Interface:
         self.furnace_temperature = 0
 
 
-    def begin(self):
-        pass #In case parameters need to be set after instanciation, or something else
+    def begin(self, port):
+        """
+        Procedure for setting up serial, and then starting start_main method. Gets the engines running.
+        """
+
+        try:
+            self.serial_manager.begin(port)
+        except Exception:
+            raise
+        if not self.setup_serial_task:
+            self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+        self.start_main()
     
     def get_furnace_temperature_status(self):
         return self.furnace_temperature
@@ -882,8 +892,8 @@ class Interface:
         if self.main_task:
             self.main_task.cancel()
 
-    def start_setup_serial(self, port_name):
-        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial(port_name))
+    def start_setup_serial(self):
+        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
         
     def stop_setup_serial(self):
         # Cancel the serial reading loop task if it's running
@@ -898,10 +908,7 @@ class Interface:
                 if serial_loss:
                     #Will run while the rest of the code runs
                     if not self.setup_serial_task:
-                        try:
-                            self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
-                        except Exception as e:
-                            print(f"Could not connect to serial: {e}") #If fail, that's OK, try again next round. GUI is updated.
+                        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
                 
                 furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
                 self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
@@ -1068,13 +1075,10 @@ class GUI:
         """
 
         try:
-            self.serial_manager.begin(self.port)
+            self.interface.begin(self.port)
         except Exception as e:
             pass
             #Update info to general errors here
-        #Where's the SerialManager.setup_serial() call? It will be called by Interface.start_main() when it detects seriel loss.
-        #It's clumsy but simpler, because we don't need to continously and non-blockingly keep track of when the async coroutine is done before moving on here
-        self.interface.start_main()
 
     def send_ping(self):
         # Schedule the coroutine in the event loop
