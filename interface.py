@@ -687,7 +687,14 @@ class SerialManager():
             #Where's StringMessageHandler? It does not need instanciation.
             self.serial_connection_manager = SerialConnectionManager(self.port_name, self.baud_rate, self.timeout, gui_queue=self.gui_queue)
             self.serial_message_handler = SerialMessageHandler(self.serial_connection_manager)
-            self.serial_handshake_handler = SerialHandshakeHandler(self.serial_connection_manager, self.serial_message_handler, self.ping_interval, self.ping_timeout, self.no_ping_respone_timeout, gui_queue=self.gui_queue)
+            
+            self.serial_handshake_handler = SerialHandshakeHandler(
+                self.serial_connection_manager,
+                self.serial_message_handler,
+                self.ping_interval, self.ping_timeout,
+                self.no_ping_respone_timeout,
+                gui_queue=self.gui_queue
+            )
         except (ValueError, TypeError, KeyError): #This is an entry point, I know, but copy-pasting 50 lines of code is avoided.
             raise
         
@@ -749,6 +756,9 @@ class SerialManager():
 
     def get_connection_info(self):
         return self.serial_connection_manager.get_connection_info()
+    
+    def get_message_timeouts(self):
+        return self.serial_message_handler.message_send_timeouts
 
     async def clean_connection(self):
         await self.serial_connection_manager.clean_connection()
@@ -849,27 +859,34 @@ class Interface:
 
         self.main_task = None
         self.setup_serial_task = None
+        self.pass_message_task = None
+
+        self.main_running = False
+
+        self.force_emergency_stop_status = False
 
         #Arduino alarm statuses
         self.thermosensor_error = False
         self.watchdog_pwm_frozen = False
         self.furnace_overheat = False
+        self.emergency_alarm = False
 
-        self.furnace_temperature = 0
+        self.furnace_temperature = None
 
 
     def begin(self, port):
         """
         Procedure for setting up serial, and then starting start_main method. Gets the engines running.
         """
-
         try:
-            self.serial_manager.begin(port)
-        except Exception:
+            self.serial_manager.begin(port) #Will complain if port format is incorrect.
+        except(ValueError, TypeError, KeyError):
             raise
-        if not self.setup_serial_task:
-            self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
-        self.start_main()
+        #port_name allready checked, won't cause error
+        self.serial_manager.set_port_name(port) #serial_manager must be instanciated somewhere first
+
+        #Where's start_setup_serial()? It will be triggered when main() detects serial loss.
+        #This is clumsy but simpler for retrying serial connection on fail.
     
     def get_furnace_temperature_status(self):
         return self.furnace_temperature
@@ -882,25 +899,29 @@ class Interface:
     
     def get_furnace_overheat_status(self):
         return self.furnace_overheat
+    
+    def get_emergency_alarm_status(self):
+        return self.emergency_alarm
+    
 
+    def force_emergency_stop(self):
+        self.force_emergency_stop_status = True
 
-    def start_main(self):
-        self.main_task = asyncio.create_task(self.run_main())
-
-    def stop_main(self):
-        # Cancel the serial reading loop task if it's running
-        if self.main_task:
-            self.main_task.cancel()
 
     def start_setup_serial(self):
-        self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
+        if not self.setup_serial_task:
+            self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
         
     def stop_setup_serial(self):
         # Cancel the serial reading loop task if it's running
         if self.setup_serial_task:
             self.setup_serial_task.cancel()
 
-    async def run_main(self):
+
+    async def main(self): #Run by using futures_bridge via run_coroutine_threadsafe, in the background.
+        self.main_running = True
+        message_timeouts = self.serial_manager.get_message_timeouts
+
         try:
             while True:
                 connection_info = self.serial_manager.get_connection_info()
@@ -923,7 +944,15 @@ class Interface:
                 furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
                 self.furnace_overheat = True if furnace_overheat_result is not None else None
                 
+                emergency_alarm_result = self.serial_manager.find_message("emergency_alarm")
+                self.emergency_alarm = True if emergency_alarm_result is not None else None
+
+                if self.force_emergency_stop_status and message_timeouts["force_emergency_stop"].timed_out():
+                    asyncio.create_task(self.serial_manager.pass_message_async("force_emergency_stop"))
+                    message_timeouts["force_emergency_stop"].reset_timer()
+                
         except asyncio.CancelledError:
+            self.main_running = False
             print("Serial reading loop cancelled. Running cleanup.")
             self.stop_setup_serial()
 
@@ -972,7 +1001,7 @@ class ProcessManager:
         self.futures_bridge = FuturesBridge(self.loop)
 
         #Instanciate async components
-        self.serial_manager = SerialManager(gui_queue = self.gui.gui_queue)
+        self.serial_manager = SerialManager(gui_queue = self.gui.gui_queue) #gui_queue is used to send messages to the GUI from elsewhere
         self.interface = Interface(self.serial_manager)
 
         #Working with circular dependencies. Serial manager needed the GUI for gui_queue first.
@@ -987,7 +1016,7 @@ class ProcessManager:
             self.gui.run()
 
     def run_asyncio_loop(self):
-        #A mew thread targets this method, so it's running there. Start the event loop self.loop in that thread.
+        #A new thread targets this method, so it's running there. Start the event loop self.loop in that thread.
         asyncio.set_event_loop(self.loop)
             
         #Keep the event loop running and ready for use
@@ -1027,9 +1056,7 @@ class GUI:
 
         #Links the name of the method called in a future (see FuturesBridge) and coroutine handlers. Normal methods can be handled locally.
         self.futures_method_handlers = { 
-            "start_setup": self.handle_setup,
-            "pass_message": self.handle_pass_message,
-            "get_connection_info": self.handle_get_connection_info,
+            "interface_main": self.handle_interface_main,
             "serial_shutdown": self.handle_serial_shutdown
         }
 
@@ -1075,26 +1102,19 @@ class GUI:
         """
 
         try:
-            self.interface.begin(self.port)
+            self.interface.begin(give_me_a_port_from_gui_input_field)
         except Exception as e:
             pass
-            #Update info to general errors here
+            #Update info to user messages
+        self.futures_bridge.schedule_coroutine(self.interface.main(), "interface_main") #Should be contained in Interface, I know, but like this I can kep track of returned futures all in one place.
 
-    def send_ping(self):
-        # Schedule the coroutine in the event loop
-        if self.serial_manager.loop.is_running():
-            self.serial_handshake_handler.ping_handshake()
-            self.update_status_label("Status: Ping sent!")
-        else:
-            self.update_status_label("Status: Event loop not running.")
-
-    def retry_connection(self):
+    def rename_com(self):
         # Schedule the setup_serial coroutine in the event loop
-        if self.serial_manager.loop.is_running():
-            self.serial_manager.setup_serial()
-            self.update_status_label("Status: Retrying connection...")
-        else:
-            self.update_status_label("Status: Event loop not running.")
+        try:
+            self.serial_manager.set_port_name(give_me_a_port_from_gui_input_field)
+        except Exception as e:
+            #Update info to user messages
+            pass
 
     def update_status_label(self, message):
         # Thread-safe update of the status label
@@ -1103,7 +1123,7 @@ class GUI:
 
     def action_loop(self):
         """
-        Anything periodic not directly related to GUI info goes here
+        Anything periodic not directly related to GUI info or handling of futures goes here
         """
         pass
 
@@ -1116,7 +1136,7 @@ class GUI:
         futures_metadata = self.bridge.poll_futures()
         for method_name, params, return_data, exception in futures_metadata:
             #Gets and runs correct handler
-            handler = self.method_handlers.get(method_name, self.default_handler)
+            handler = self.futures_method_handlers[method_name]
             handler(method_name, params, return_data, exception) #method_name and params info gives flexibility, though rarely used. Remove from GUI and FuturesBridge?
 
         self.master.after(self.futures_poll_interval, self.poll_bridge)
@@ -1140,8 +1160,8 @@ class GUI:
 
 use_gui = False
 
-if __name__ == "__main__":
-    # Use GUI
+if __name__ == "__main__": #If program not started from another application...
+    # use GUI
     use_gui = True
 
 process_manager = ProcessManager(use_gui)
