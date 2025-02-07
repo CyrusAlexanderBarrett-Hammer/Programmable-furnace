@@ -330,12 +330,7 @@ struct Oven
               absoluteMaxTemp(_absoluteMaxTemp), 
               heatingOverride(_heatingOverride), 
               useHeatingSimulation(_useHeatingSimulation)
-            {}
-  
-    void begin()
-    {
-      pinMode(ovenControllPin, OUTPUT);
-    }
+            {pinMode(_ovenControllPin, OUTPUT);}
   
     void turnOvenControllPinOn()
     {
@@ -422,7 +417,7 @@ namespace Messages{
     &Messages::OVEN_OVERHEAT
   };
 
-  static constexpr size_t NUM_MESSAGES = sizeof(messagePointers) / sizeof(messagePointers[0]); //size calculations are platform independent unlike integers, size_t bridges the gap
+  static constexpr size_t NUM_MESSAGES = sizeof(messagePointers) / sizeof(messagePointers[0]); //size calculations are platform dependent, size_t bridges the gap
 };
 
 
@@ -460,6 +455,7 @@ class SerialConnectionManager{
 
   private:
     SerialConnectionManager() {
+      
     }
 
     // Private destructor (optional)
@@ -891,7 +887,6 @@ void setup() {
     oven1OverheatWatchdog = new OvenOverheatWatchdog(oven1AbsoluteMax);
   }
   serialConnectionManager.begin();
-  oven1->begin();
 }
 
 void loop() {

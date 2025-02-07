@@ -47,7 +47,6 @@ class ErrorTools:
     def check_nested_error(e, exception):
         exception_string = exception.__name__
         error_str = ErrorTools.extract_error_message(e)
-        print("Extracted error message:", error_str)
         return exception_string in error_str
 
 class TimeManager:
@@ -985,8 +984,7 @@ class Interface:
             self.main_running = False
             print("Serial reading loop cancelled. Running cleanup.")
             self.stop_setup_serial()
-
-
+    
 class ProcessManager:
     """
     Encapsulates overall procedures for managing processes
@@ -1065,7 +1063,6 @@ class ProcessManager:
             self.asyncio_thread.join()
         print("Shutdown complete.")
 
-
 class GUI:
     #Nothing here can be async or blocking, as it will block the GUI. Hence, FuturesBridge for sync to async bridging.
 
@@ -1080,45 +1077,42 @@ class GUI:
 
         self.interface = None #Interface depends on Serial Manager, and can't be set before SerialManager is started with SerialManager.begin()
 
-        self.action_loop_interval = 100 #Ms
-        self.gui_queue_poll_interval = 100 #Ms
-        self.futures_poll_interval = 100 #Ms
-
-        #Links the name of the method called in a future (see FuturesBridge) and coroutine handlers. Normal methods can be handled locally.
-        self.futures_method_handlers = { 
-            "interface_main": self.handle_interface_main,
-            "serial_shutdown": self.handle_serial_shutdown
-        }
-
         self.lock = threading.Lock()
 
-        self.root = tk.Tk()
-        self.root.title("Interface")
-        self.root.geometry("400x300")
         self.gui_queue = queue.Queue() #Updates sent directly to GUI from elsewhere. Should really have been instanciated in the ProcessManager for more elegant code.
 
-        self.begin_button = ttk.Button(self.root, text="Begin", command=self.on_start_setup)
-        self.begin_button.pack(pady=10)
+        self.bridge_timer = TimeManager.Timer(100)
+        self.poll_gui_timer = TimeManager.Timer(100)
 
-        self.serial_info = ttk.Label(self.root, text="Serial Communication Inactive")
-        self.serial_info.pack(pady=20)
+        self.start_timer = TimeManager.Timer(500)
+        self.interface_status_timer = TimeManager.Timer(1000)
 
-        self.ping_button = ttk.Button(self.root, text="Send Ping", command=self.send_ping)
-        self.ping_button.pack(pady=10)
+        self.status_info_timer = TimeManager.Timer(1000)
 
-        self.status_label = ttk.Label(self.root, text="Status: Waiting for setup...")
-        self.status_label.pack(pady=10)
+    def run(self):
+        while True:
+            if self.poll_gui_timer.timed_out():
+                self.poll_gui_queue()
+                self.poll_gui_timer.reset_timer()
+            
+            if self.start_timer.timed_out():
+                self.on_start_setup()
+                self.start_timer.reset_timer()
 
-        self.retry_button = ttk.Button(self.root, text="Retry Connection", command=self.retry_connection)
-        self.retry_button.pack(pady=10)
+            if self.interface_status_timer.timed_out():
+                self.interface_status()
+                self.interface_status_timer.reset_timer()
+            if self.serial_manager.begin_run and self.status_info_timer.timed_out():
+                print(self.serial_manager.get_connection_info())
+                self.status_info_timer.reset_timer()
 
-        #Loop for any non-message actions that must be run periodicly
-        self.root.after(self.action_loop_interval, self.action_loop) #tk.after works with tkinter GUIs, and starts the given method after timeout
-
-        # Start the futures polling and GUI-queue update loops for real-time updates. 
-        self.root.after(self.futures_poll_interval, self.poll_bridge)
-        self.root.after(self.gui_queue_poll_interval, self.poll_gui_queue)
-
+    def interface_status(self):
+        print(self.interface.get_furnace_temperature_status())
+        print(self.interface.get_thermosensor_error_status())
+        print(self.interface.get_watchdog_pwm_frozen_status())
+        print(self.interface.get_furnace_overheat_status())
+        print(self.interface.get_emergency_alarm_status())
+    
     def begin(self, futures_bridge, serial_manager, interface): #Called by the process manager, not from GUI.
         self.futures_bridge = futures_bridge
         
@@ -1126,50 +1120,40 @@ class GUI:
 
         self.interface = interface
 
+
+
     def on_start_setup(self):
         """
         Procedure for setting up serial, and then starting Interface via it's start_main method. Gets the engines running.
         """
-
         try:
-            self.interface.begin(give_me_a_port_from_gui_input_field)
+            self.interface.begin("COM13")
             self.futures_bridge.schedule_coroutine(self.interface.main(), "interface_main") #Should be contained in Interface, I know, but like this I can kep track of returned futures all in one place.
         except Exception as e:
-            pass
-            #Update info to user messages
+            raise
 
     def rename_com(self):
         # Schedule the setup_serial coroutine in the event loop
         try:
-            self.serial_manager.set_port_name(give_me_a_port_from_gui_input_field)
+            self.serial_manager.set_port_name("COM13")
         except Exception as e:
             #Update info to user messages
-            pass
+            print(e)
 
-    def update_status_label(self, message):
-        # Thread-safe update of the status label
-        self.status_label.config(text=message)
+    # def update_status_label(self, message):
+    #     # Thread-safe update of the status label
+    #     self.status_label.config(text=message)
 
+    # def poll_bridge(self):
+    #     """
+    #     Polls for the futures.done and futures.result from the futures bridge, and runs the correct handler for the async coroutine completed.
+    #     """
 
-    def action_loop(self):
-        """
-        Anything periodic not directly related to GUI info or handling of futures goes here
-        """
-        pass
-
-
-    def poll_bridge(self):
-        """
-        Polls for the futures.done and futures.result from the futures bridge, and runs the correct handler for the async coroutine completed.
-        """
-
-        futures_metadata = self.bridge.poll_futures()
-        for method_name, params, return_data, exception in futures_metadata:
-            #Gets and runs correct handler
-            handler = self.futures_method_handlers[method_name] #Gets the method based on method_name
-            handler(method_name, params, return_data, exception) #method_name and params info gives flexibility, though rarely used. Remove from GUI and FuturesBridge?
-
-        self.master.after(self.futures_poll_interval, self.poll_bridge)
+    #     futures_metadata = self.bridge.poll_futures()
+    #     for method_name, params, return_data, exception in futures_metadata:
+    #         #Gets and runs correct handler
+    #         handler = self.futures_method_handlers[method_name] #Gets the method based on method_name
+    #         handler(method_name, params, return_data, exception) #method_name and params info gives flexibility, though rarely used. Remove from GUI and FuturesBridge?
 
     def poll_gui_queue(self):
         """
@@ -1178,14 +1162,9 @@ class GUI:
         try:
             while True:
                 message = self.gui_queue.get_nowait()
-                self.update_status_label(f"Status: {message}")
+                print(f"From gui_queue: {message}")
         except queue.Empty:
             pass
-        # Schedule the next check
-        self.root.after(self.gui_queue_poll_interval, self.poll_gui_queue)
-
-    def run(self):
-        self.root.mainloop()
 
 
 use_gui = False
@@ -1196,62 +1175,3 @@ if __name__ == "__main__": #If program not started from another application...
 
 process_manager = ProcessManager(use_gui)
 process_manager.startup()
-
-# if __name__ == "__main__":
-# main()
-
-# import tkinter as tk
-# from queue import Queue
-# import threading
-# import time
-# import json
-
-# # Worker function to simulate background processing
-# def worker(queue):
-# for i in range(5):
-# # Example data to send (dictionary)
-# data = {"id": i, "status": "processing", "value": i * 30}
-# queue.put(data) # Send dictionary to the queue
-# time.sleep(1) # Simulate processing time
-# # Sending a final message
-# queue.put({"id": None, "status": "done"})
-
-# # Function to update the GUI
-# def update_gui():
-# try:
-# while not queue.empty():
-# data = queue.get_nowait()
-# id_text = f"Received: {data['id']}"
-# id.config(text=id_text)
-# status_text = f"Received: {data['status']}"
-# status.config(text=status_text)
-# value_text = f"Received: {data['value']}"
-# value.config(text=value_text)
-# except Exception as e:
-# print(f"Error: {e}")
-# finally:
-# root.after(100, update_gui) # Schedule next check
-
-# # Setup tkinter GUI
-# root = tk.Tk()
-# root.title("GUI Queue Example")
-
-# id = tk.Label(root, text="Waiting for data...", font=("Arial", 14))
-# id.pack(pady=20)
-# status = tk.Label(root, text="Waiting for data...", font=("Arial", 14))
-# status.pack(pady=20)
-# value = tk.Label(root, text="Waiting for data...", font=("Arial", 14))
-# value.pack(pady=20)
-
-# queue = Queue() # Thread-safe queue
-
-# # Start worker thread
-# thread = threading.Thread(target=worker, args=(queue,))
-# thread.daemon = True # Exit thread when main program exits
-# thread.start()
-
-# # Start GUI queue polling
-# root.after(100, update_gui)
-
-# # Start the tkinter main loop
-# root.mainloop()
