@@ -309,7 +309,7 @@ class SerialConnectionManager:
                 if self.serial_port is None:
                     await self.initialize_port()
                 #Clear old ping responses in both buffer and storage, we want relevants
-                self.serial_message_handler.store_all_messages_async()
+                await self.serial_message_handler.store_all_messages_async()
                 self.serial_message_handler.find_message("ping_arduino_pc", purge = True)
                 #Attempt connection
                 connection_success = await self.attempt_connection()
@@ -485,7 +485,7 @@ class SerialMessageHandler:
         while not timer.timed_out():
             if pull:
                 try:
-                    await self.serial_message_handler.store_all_messages_async()
+                    await self.store_all_messages_async()
                 except (FileNotFoundError, PermissionError):
                     raise
 
@@ -497,7 +497,7 @@ class SerialMessageHandler:
     
     async def store_all_messages_async(self):
         try:
-            while self.serial_connection_manager.serial_port.in_waiting():
+            while self.serial_connection_manager.serial_port.in_waiting:
                 message = await self.get_message_async()
                 if message.message_valid:
                     self.received_message_buffer.append(message)
@@ -585,7 +585,7 @@ class SerialMessageHandler:
     async def run_serial_readings(self, interval):
         try:
             while True:
-                self.store_all_messages_async()
+                await self.store_all_messages_async()
                 await asyncio.sleep(interval)
         except (FileNotFoundError, PermissionError) as e:
             print(f"Serial readings failed: {e}") #No reraise is intentional
@@ -886,6 +886,7 @@ class Interface:
         self.setup_serial_task = None
         self.pass_message_task = None
 
+        self.begin_run = False
         self.main_running = False
 
         self.force_emergency_stop_status = False
@@ -910,6 +911,7 @@ class Interface:
 
         #Where's start_setup_serial()? It will be triggered when main() detects serial loss.
         #This is clumsy but simpler for retrying serial connection on fail.
+        self.begin_run = True
     
     def get_furnace_temperature_status(self):
         return self.furnace_temperature
