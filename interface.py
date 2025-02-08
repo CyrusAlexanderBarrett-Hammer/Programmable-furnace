@@ -299,30 +299,24 @@ class SerialConnectionManager:
 
         self.gui_queue.put({"serial_status": "connecting"})
 
-        if not self.port_name == self.recent_port_name:
-            self.recent_port_name == self.port_name
-        try:
-            await self.initialize_port()
-        except Exception as e:
-            if not ErrorTools.check_nested_error(e, PermissionError):
-                raise
-
-        self.serial_message_handler.find_message("ping_pc_arduino", purge=True)
-
         connection_success = False
         while not connection_success:
             if not self.port_name == self.recent_port_name:
-                try:
-                    await self.initialize_port()
-                    self.recent_port_name == self.port_name
-                except Exception as e:
-                    raise
-            # Attempt to connect to the specified port
+                self.clean_connection()
+                self.recent_port_name = self.port_name
+
             try:
+                if self.serial_port is None:
+                    await self.initialize_port()
+                #Clear old ping responses in both buffer and storage, we want relevants
+                self.serial_message_handler.store_all_messages_async()
+                self.serial_message_handler.find_message("ping_arduino_pc", purge = True)
+                #Attempt connection
                 connection_success = await self.attempt_connection()
             except Exception as e:
+                self.update_for_serial_error(e)
                 raise
-            #No success? Wrong! Do it again! (No dark sarcasm in the classroom)
+            #No response? Wrong! Do it again! (No dark sarcasm in the classroom)
         
         self.serial_loss = False #Got this far? Serial port is confirmed.
         self.gui_queue.put({"serial_error": "running smoothy"})
@@ -1177,11 +1171,14 @@ class GUI:
         """
         try:
             while True:
-                message = self.gui_queue.get_nowait()
-                self.update_status_label(f"Status: {message}")
+                with self.lock:
+                    self.queue_message = self.gui_queue.get_nowait()
+                    if "serial_error" in self.queue_message:
+                        print(f"Serial error: {self.queue_message}")
+                    elif "serial_status" in self.queue_message:
+                        print(f"Serial status: {self.queue_message}")
         except queue.Empty:
             pass
-        # Schedule the next check
         self.root.after(self.gui_queue_poll_interval, self.poll_gui_queue)
 
     def run(self):
