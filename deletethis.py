@@ -299,7 +299,7 @@ class SerialConnectionManager:
         self.gui_queue.put({"serial_status": "connecting"})
 
         if not self.port_name == self.recent_port_name:
-            self.recent_port_name == self.port_name
+            self.recent_port_name = self.port_name
         try:
             await self.initialize_port()
         except Exception as e:
@@ -456,7 +456,7 @@ class SerialMessageHandler:
         for i in self.received_message_buffer:
             if i.message_key == message:
                 self.received_message_buffer.pop(self.received_message_buffer.index(i))
-                if not purge:
+                if not purge: #If purge, keep tracking down and purging messages without returning
                     return i
         return None
     
