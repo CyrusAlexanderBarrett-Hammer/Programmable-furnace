@@ -959,7 +959,7 @@ void sendAlarmMessages(bool generalEmergency, bool temperatureSensorFailAlarm, b
         MessageTimeouts::EMERGENCY_ALARM.resetTimer();
       }
   }
-  if(oven1TemperatureSensor->temperatureSensorFailAlarm)
+  if(temperatureSensorFailAlarm)
   {
     if(MessageTimeouts::THERMOSENSOR_ERROR.timedOut())
       {
@@ -967,7 +967,7 @@ void sendAlarmMessages(bool generalEmergency, bool temperatureSensorFailAlarm, b
         MessageTimeouts::THERMOSENSOR_ERROR.resetTimer();
       }
   }
-  if(oven1OverheatWatchdog->ovenOverheat)
+  if(ovenOverheat)
   {
     if(MessageTimeouts::OVEN_OVERHEAT.timedOut())
       {
@@ -975,7 +975,7 @@ void sendAlarmMessages(bool generalEmergency, bool temperatureSensorFailAlarm, b
         MessageTimeouts::OVEN_OVERHEAT.resetTimer();
       }
   }
-  if(oven1SrLatchFrozenWatchdog->srLatchFrozen)
+  if(srLatchFrozen)
   {
     if(MessageTimeouts::WATCHDOG_SR_LATCH_FROZEN.timedOut())
       {
