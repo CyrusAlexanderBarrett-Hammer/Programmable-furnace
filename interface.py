@@ -401,7 +401,6 @@ class SerialConnectionManager:
             'port_name': self.port_name,
             'baud_rate': self.baud_rate,
             'timeout': self.timeout,
-            'COM_description': self.serial_port.description if not self.serial_port is None else "",
             'port_open': True if not self.serial_port is None and self.serial_port.is_open else False
         }
 
