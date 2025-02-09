@@ -47,7 +47,6 @@ class ErrorTools:
     def check_nested_error(e, exception):
         exception_string = exception.__name__
         error_str = ErrorTools.extract_error_message(e)
-        print("Extracted error message:", error_str)
         return exception_string in error_str
 
 class TimeManager:
@@ -245,6 +244,7 @@ class StringMessageHandler:
 
         return cls.FullMessage(message_key, value, timestamp, message_valid)
 
+
 class SerialConnectionManager:
 
     port_initialization_time = 1.6
@@ -278,7 +278,8 @@ class SerialConnectionManager:
         self.recent_port_name = self.port_name #Compared with self.port_name to check port name change
         self.connect_in_progress = False
 
-        self.lock = asyncio.Lock()
+        self.asyncio_lock = asyncio.Lock()
+        self.threading_lock = threading.Lock()
         self.gui_queue = gui_queue # Optional: For GUI updates
 
     def begin(self, serial_message_handler, serial_handshake_handler):
@@ -308,6 +309,7 @@ class SerialConnectionManager:
                 if self.serial_port is None:
                     await self.initialize_port()
                 #Clear old ping responses in both buffer and storage, we want relevants
+                print("ABOUT TO RUN FROM SETUP_COM")
                 await self.serial_message_handler.store_all_messages_async()
                 self.serial_message_handler.find_message("ping_arduino_pc", purge = True)
                 #Attempt connection
@@ -342,7 +344,7 @@ class SerialConnectionManager:
 
         try:
             # Open serial port in executor to prevent blocking
-            async with self.lock:
+            async with self.asyncio_lock:
                 self.serial_port = await loop.run_in_executor(None, lambda: serial.Serial(self.port_name, self.baud_rate, timeout=self.timeout))
         except (serial.SerialException) as e:
             print(f"Error setting up port: {e}")
@@ -361,27 +363,27 @@ class SerialConnectionManager:
         self.serial_port = None
 
     async def close_connection(self):
-        if not self.serial_port:
-            print(f"Serial port is not initialized.")
-            raise PortNotInitializedError()
-
-        if not self.serial_port.is_open:
-            print(f"Serial connection on {self.serial_port} is already closed.")
-            return #This can pass silently
-
-        try:
-            async with self.lock:
-            # Close serial port in executor to prevent blocking
-                loop = asyncio.get_running_loop()
-                await loop.run_in_executor(None, self.serial_port.close)
-                print(f"Serial connection on {self.serial_port.name} closed.")
-        except (serial.SerialException) as e:
-            print(f"Serial exception when attempting to close port {self.serial_port.name}.")
-            raise e
+        with self.threading_lock:
+            if not self.serial_port:
+                print(f"Serial port is not initialized.")
+                raise PortNotInitializedError()
+    
+            if not self.serial_port.is_open:
+                print(f"Serial connection on {self.serial_port} is already closed.")
+                return #This can pass silently
+    
+            try:
+                async with self.asyncio_lock:
+                # Close serial port in executor to prevent blocking
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(None, self.serial_port.close)
+                    print(f"Serial connection on {self.serial_port.name} closed.")
+            except (serial.SerialException) as e:
+                print(f"Serial exception when attempting to close port {self.serial_port.name}.")
+                raise e
 
     def update_for_serial_error(self, e):
         self.serial_loss = True
-        
         if not self.gui_queue is None:
             if ErrorTools.check_nested_error(e, FileNotFoundError):
                 self.gui_queue.put({"serial_error": "Serial COM port not found. Connect device, or set correct COM port as seen in device manager"})
@@ -392,27 +394,29 @@ class SerialConnectionManager:
             self.gui_queue.put({"serial_status": "serial connection lost"})
 
     def get_connection_info(self):
-        return {
-            'serial_loss': self.serial_loss,
-            'port_name': self.port_name,
-            'baud_rate': self.baud_rate,
-            'timeout': self.timeout,
-            'port_open': True if not self.serial_port is None and self.serial_port.is_open else False
-        }
+        with self.threading_lock:
+            return {
+                'serial_loss': self.serial_loss,
+                'port_name': self.port_name,
+                'baud_rate': self.baud_rate,
+                'timeout': self.timeout,
+                'port_open': True if not self.serial_port is None and self.serial_port.is_open else False
+            }
 
     def set_port_name(self, port_name):
-        if not isinstance(port_name, (str, int)):
-            raise TypeError(f"port_name must be a string or int, got {type(port_name).__name__}")
+        with self.threading_lock:
+            if not isinstance(port_name, (str, int)):
+                raise TypeError(f"port_name must be a string or int, got {type(port_name).__name__}")
 
-        elif isinstance(port_name, int):
-            if port_name < 0:
-                raise ValueError(f"port_name cannot be negative, got {port_name}")
-            self.port_name = "COM" + str(port_name)
-        elif isinstance(port_name, str):
-            if not re.fullmatch(r"(COM\d+|\d+)", port_name):
-                raise ValueError(f"port_name must be 'COM' followed by a number (e.g., COM18), or just a number (e.g., 18). Got {port_name}")
-            elif port_name.isdigit():
-                self.self.port_name = "COM" + str(port_name)
+            elif isinstance(port_name, int):
+                if port_name < 0:
+                    raise ValueError(f"port_name cannot be negative, got {port_name}")
+                self.port_name = "COM" + str(port_name)
+            elif isinstance(port_name, str):
+                if not re.fullmatch(r"(COM\d+|\d+)", port_name):
+                    raise ValueError(f"port_name must be 'COM' followed by a number (e.g., COM18), or just a number (e.g., 18). Got {port_name}")
+                elif port_name.isdigit():
+                    self.self.port_name = "COM" + str(port_name)
 
 
 class SerialMessageHandler:
@@ -430,7 +434,8 @@ class SerialMessageHandler:
 
         self.serial_readings_task = None
 
-        self.lock = asyncio.Lock()
+        self.asyncio_lock = asyncio.Lock()
+        self.threading_lock = threading.Lock()
         
         self.message_send_timeouts = {
             "ping_pc_arduino": TimeManager.Timer(5000),
@@ -438,16 +443,22 @@ class SerialMessageHandler:
         }
     
     def get_receieved_messages(self):
-        return self.received_message_buffer
+        with self.threading_lock:
+            return self.received_message_buffer
+    
+    def get_message_timeouts(self):
+        with self.threading_lock:
+            return self.message_send_timeouts
 
     def find_message(self, message, purge = False):
-        if message not in StringMessageHandler.messages.keys():
-            raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {StringMessageHandler.valid_messages}")
-        for i in self.received_message_buffer:
-            if i.message_key == message:
-                self.received_message_buffer.pop(self.received_message_buffer.index(i))
-                if not purge:
-                    return i
+        with self.threading_lock:
+            if message not in StringMessageHandler.messages.keys():
+                raise KeyError(f"Message type '{message}' does not exist. Valid messages are: {StringMessageHandler.valid_messages}")
+            for i in self.received_message_buffer:
+                if i.message_key == message:
+                    self.received_message_buffer.pop(self.received_message_buffer.index(i))
+                    if not purge: #If purge, keep tracking down and purging messages without returning
+                        return i
         return None
     
     def find_message_with_timeout(self, timer, message):
@@ -481,6 +492,7 @@ class SerialMessageHandler:
         while not timer.timed_out():
             if pull:
                 try:
+                    print("ABOUT TO RUN FROM FIND_MESSAGE_WITH_BLOCKING_TIMEOUT")
                     await self.store_all_messages_async()
                 except (FileNotFoundError, PermissionError):
                     raise
@@ -492,12 +504,15 @@ class SerialMessageHandler:
         return None
     
     async def store_all_messages_async(self):
+        print("STARTED")
         try:
             while self.serial_connection_manager.serial_port.in_waiting:
                 message = await self.get_message_async()
                 if message.message_valid:
                     self.received_message_buffer.append(message)
-        except:
+            print("STOPPED SUCCESSFULLY")
+        except Exception as e:
+            print(f"STOPPED WITH {e}")
             raise
 
     async def pass_message_async(self, message, value=None, timestamp=None):
@@ -533,7 +548,7 @@ class SerialMessageHandler:
     async def send_message_async(self, message):
         loop = asyncio.get_running_loop()
 
-        async with self.lock:
+        async with self.asyncio_lock:
             try:
                 await loop.run_in_executor(None, lambda: self.serial_connection_manager.serial_port.write((message + '\n').encode('utf-8')))  #Lambda required for arguments
             except (serial.SerialException, Exception) as e:
@@ -552,7 +567,7 @@ class SerialMessageHandler:
 
         message_decoded = ""
 
-        async with self.lock:
+        async with self.asyncio_lock:
             try:
                 message = await loop.run_in_executor(None, self.serial_connection_manager.serial_port.readline)
                 message_decoded = message.decode('utf-8').strip()
@@ -581,6 +596,7 @@ class SerialMessageHandler:
     async def run_serial_readings(self, interval):
         try:
             while True:
+                print("ABOUT TO RUN FROM RUN_SERIAL_READINGS")
                 await self.store_all_messages_async()
                 await asyncio.sleep(interval)
         except (FileNotFoundError, PermissionError) as e:
@@ -607,7 +623,8 @@ class SerialHandshakeHandler:
 
         self.ping_task = None
 
-        self.lock = asyncio.Lock()
+        self.asyncio_lock = asyncio.Lock()
+        self.threading_lock = threading.Lock()
 
     async def ping_handshake(self):
         # Perform the handshake asynchronously
@@ -688,8 +705,12 @@ class SerialManager():
         self.valid_messages = ""
 
 
-    #this method misses and needs value verifications.
-    def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
+    #Non-blocking, but async so it can be run in the background event loop, from the foreground, with run_coroutine_threadsafe
+    async def instanciate_manager(gui_queue = None):
+        return SerialManager(gui_queue)
+
+    #this method misses and needs value verifications. #Non-blocking, but async so it can be run in the background event loop, from the foreground, with run_coroutine_threadsafe
+    async def begin(self, port_name, baud_rate=9600, serial_reading_timeout=2, serial_readings_interval = 0.2, ping_interval = 5, ping_timeout = 2, no_ping_response_timeout = 15):
         self.port_name = port_name
         self.baud_rate = baud_rate
         self.timeout = serial_reading_timeout
@@ -777,7 +798,7 @@ class SerialManager():
         return self.serial_connection_manager.get_connection_info()
     
     def get_message_timeouts(self):
-        return self.serial_message_handler.message_send_timeouts
+        return self.serial_message_handler.get_message_timeouts()
 
     async def clean_connection(self):
         await self.serial_connection_manager.clean_connection()
@@ -804,7 +825,7 @@ class FuturesBridge:
     def __init__(self, event_loop):
         self.loop = event_loop
         self.futures_metadata = {} #{Future{"method_name", "params", "done", "return_data", "exception"}}In here will be one or more dictionaries with method call data.
-        self.lock = threading.Lock()
+        self.asyncio_lock = threading.Lock()
 
     def schedule_coroutine(self, coro, method_name, allow_parallel = False, **params):
         """
@@ -816,7 +837,7 @@ class FuturesBridge:
         :raises RuntimeError: If the method is allready running with allow_parallel = True
         """
 
-        with self.lock:
+        with self.asyncio_lock:
             if not allow_parallel:
                 #Refuse to run if the method with given passed name is allready running
                 for fut, metadata in self.futures_metadata.items():
@@ -832,7 +853,7 @@ class FuturesBridge:
             "exception": None
         }
 
-        with self.lock:
+        with self.asyncio_lock:
             self.futures_metadata[fut] = info
 
     def poll_futures(self):
@@ -843,7 +864,7 @@ class FuturesBridge:
         return: List with dictionaries, one per completed future, with their metadata method_name, params, return_data, and exception 
         """
         completed = []
-        with self.lock:
+        with self.asyncio_lock:
             remove = [] #Remove these futures if they are going to be put in the return list
             #Get metadata for all active futures
             for fut, metadata in self.futures_metadata.items():
@@ -975,8 +996,7 @@ class Interface:
             self.main_running = False
             print("Serial reading loop cancelled. Running cleanup.")
             self.stop_setup_serial()
-
-
+    
 class ProcessManager:
     """
     Encapsulates overall procedures for managing processes
@@ -1023,7 +1043,7 @@ class ProcessManager:
         self.futures_bridge = FuturesBridge(self.loop)
 
         #Instanciate async components
-        self.serial_manager = SerialManager(gui_queue = self.gui_queue) #gui_queue is used to send messages to the GUI from elsewhere
+        self.serial_manager = asyncio.run_coroutine_threadsafe(SerialManager.instanciate_manager(gui_queue = self.gui_queue), self.loop) #gui_queue is used to send messages to the GUI from elsewhere
         self.interface = Interface(self.serial_manager)
 
         #Working with circular dependencies. Serial manager needed the GUI for gui_queue first.
@@ -1080,7 +1100,7 @@ class GUI:
             "serial_shutdown": self.handle_serial_shutdown
         }
 
-        self.lock = threading.Lock()
+        self.asyncio_lock = threading.Lock()
 
         self.root = tk.Tk()
         self.root.title("Interface")
@@ -1122,11 +1142,10 @@ class GUI:
         """
 
         try:
-            self.interface.begin(give_me_a_port_from_gui_input_field)
-            self.futures_bridge.schedule_coroutine(self.interface.main(), "interface_main") #Should be contained in Interface, I know, but like this I can kep track of returned futures all in one place.
+            asyncio.run_coroutine_threadsafe(self.interface.begin("COM3"), self.futures_bridge.loop)
+            self.futures_bridge.schedule_coroutine(self.interface.main(), "interface_main") #Should be contained in Interface, I know, but like this I can keep track of returned futures all in one place.
         except Exception as e:
-            pass
-            #Update info to user messages
+            raise
 
     def rename_com(self):
         # Schedule the setup_serial coroutine in the event loop
@@ -1156,7 +1175,10 @@ class GUI:
         futures_metadata = self.bridge.poll_futures()
         for method_name, params, return_data, exception in futures_metadata:
             #Gets and runs correct handler
-            handler = self.futures_method_handlers[method_name] #Gets the method based on method_name
+            try:
+                handler = self.futures_method_handlers[method_name] #Gets the method based on method_name
+            except KeyError:
+                print(f"{method_name} has no handler")
             handler(method_name, params, return_data, exception) #method_name and params info gives flexibility, though rarely used. Remove from GUI and FuturesBridge?
 
         self.master.after(self.futures_poll_interval, self.poll_bridge)
@@ -1167,7 +1189,7 @@ class GUI:
         """
         try:
             while True:
-                with self.lock:
+                with self.asyncio_lock:
                     self.queue_message = self.gui_queue.get_nowait()
                     if "serial_error" in self.queue_message:
                         print(f"Serial error: {self.queue_message}")
