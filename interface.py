@@ -127,6 +127,7 @@ class StringMessageHandler:
 
     valid_messages = ", ".join(messages.keys())
 
+    expected_parts = 4
     message_part_separator = ","
 
     @dataclass
@@ -155,27 +156,26 @@ class StringMessageHandler:
     @classmethod
     def parse_message(cls, message_str):
         message_valid = False
-        expected_parts = 3
 
         # Split the message string into parts
         incoming_parts = message_str.split(cls.message_part_separator)
 
         # Check if the message has the correct number of parts
-        if len(incoming_parts) != expected_parts:
-            print(f"Message '{message_str}' has an unexpected number of parts. Expected {expected_parts}.")
+        if len(incoming_parts) != cls.expected_parts:
+            print(f"Message '{message_str}' has an unexpected number of parts. Expected {cls.expected_parts}.")
         else:
             message_valid = True
 
         if message_valid:
             parsed = {
-                'message_category': incoming_parts[0],
-                'value': incoming_parts[1],
-                'timestamp': incoming_parts[2],
+                'message_instruction': incoming_parts[0] + cls.message_part_separator + incoming_parts[1],
+                'value': incoming_parts[2],
+                'timestamp': incoming_parts[3],
                 'message_valid': True
             }
         else:
             parsed = {
-                'message_category': None,
+                'message_instruction': None,
                 'value': None,
                 'timestamp': None,
                 'message_valid': False
@@ -222,12 +222,12 @@ class StringMessageHandler:
 
         if parsed["message_valid"]:
             for key, msg_val in cls.messages.items():
-                category, message = parsed['message_category'].split(cls.message_part_separator)
+                category, message = parsed['message_instruction'].split(cls.message_part_separator)
                 if msg_val.category == category and msg_val.message == message:
                     message_key = key
                     break
             if message_key is None:
-                print(f"Unknown message type for category '{parsed['message_category']}'. Setting to None, the message to invalid, and moving on.")
+                print(f"Unknown message type for category '{parsed['message_instruction']}'. Setting to None, the message to invalid, and moving on.")
             else:
                 message_valid = True
 
@@ -244,7 +244,6 @@ class StringMessageHandler:
                 timestamp = converted_datetime
 
         return cls.FullMessage(message_key, value, timestamp, message_valid)
-
 
 class SerialConnectionManager:
 
@@ -344,10 +343,7 @@ class SerialConnectionManager:
         try:
             # Open serial port in executor to prevent blocking
             async with self.lock:
-                self.serial_port = await loop.run_in_executor(
-                    None,
-                    lambda: serial.Serial(self.port_name, self.baud_rate, timeout=self.timeout)
-                )
+                self.serial_port = await loop.run_in_executor(None, lambda: serial.Serial(self.port_name, self.baud_rate, timeout=self.timeout))
         except (serial.SerialException) as e:
             print(f"Error setting up port: {e}")
             if ErrorTools.check_nested_error(e, FileNotFoundError):
@@ -539,7 +535,7 @@ class SerialMessageHandler:
 
         async with self.lock:
             try:
-                await loop.run_in_executor(None, self.serial_connection_manager.serial_port.write, (message + '\n').encode('utf-8'))
+                await loop.run_in_executor(None, lambda: self.serial_connection_manager.serial_port.write((message + '\n').encode('utf-8')))  #Lambda required for arguments
             except (serial.SerialException, Exception) as e:
                 print(f"Message not sent: {e}")
                 if ErrorTools.check_nested_error(e, FileNotFoundError):
@@ -558,7 +554,7 @@ class SerialMessageHandler:
 
         async with self.lock:
             try:
-                message = await loop.run_in_executor(None, self.serial_connection_manager.serial_port.readline())
+                message = await loop.run_in_executor(None, self.serial_connection_manager.serial_port.readline)
                 message_decoded = message.decode('utf-8').strip()
             except (serial.SerialException, Exception) as e:
                 print(f"Message not sent: {e}")
@@ -627,7 +623,7 @@ class SerialHandshakeHandler:
         except Exception as e:
             print(f"Error during ping handshake: {e}")
             raise
-        if response is None:
+        if not response is None: #Found the response
             print("Received valid handshake response.")
             return True
         else:
@@ -690,8 +686,6 @@ class SerialManager():
 
         self.messages = {}
         self.valid_messages = ""
-
-        self.lock = asyncio.Lock()
 
 
     #this method misses and needs value verifications.
@@ -957,20 +951,21 @@ class Interface:
                         self.setup_serial_task = asyncio.create_task(self.serial_manager.setup_serial())
                 
                 furnace_temperature_result = self.serial_manager.find_message("temperature_reading")
-                self.furnace_temperature = furnace_temperature_result.value if furnace_temperature_result is not None else None
+                if not furnace_temperature_result is None:
+                    self.furnace_temperature = furnace_temperature_result.value
 
                 #The errors are only cleared Arduino-side if the Arduino is restarted. This program will need a restart too, it lackas an error clearance if no error after some time of serial communication.
-                thermosensor_error_result = self.serial_manager.find_message("thermosensor_error")
-                self.thermosensor_error = True if thermosensor_error_result is not None else None
+                if self.serial_manager.find_message("thermosensor_error"):
+                    self.thermosensor_error = True
 
-                watchdog_pwm_frozen_result = self.serial_manager.find_message("watchdog_pwm_frozen")
-                self.watchdog_pwm_frozen = True if watchdog_pwm_frozen_result is not None else None
+                if self.serial_manager.find_message("watchdog_pwm_frozen"):
+                    self.watchdog_pwm_frozen = True
 
-                furnace_overheat_result = self.serial_manager.find_message("furnace_overheat")
-                self.furnace_overheat = True if furnace_overheat_result is not None else None
+                if self.serial_manager.find_message("furnace_overheat"):
+                    self.furnace_overheat = True
                 
-                emergency_alarm_result = self.serial_manager.find_message("emergency_alarm")
-                self.emergency_alarm = True if emergency_alarm_result is not None else None
+                if self.serial_manager.find_message("emergency_alarm"):
+                    self.emergency_alarm = True
 
                 if self.force_emergency_stop_status and message_timeouts["force_emergency_stop"].timed_out():
                     asyncio.create_task(self.serial_manager.pass_message_async("force_emergency_stop"))
