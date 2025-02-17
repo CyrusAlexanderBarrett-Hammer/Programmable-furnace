@@ -31,6 +31,17 @@ void loop() {
   ParsedMessageStruct message = serialMessageHandler.getMessage();
 
   serialHandshakeHandler.handleHandshake(message);
+  
+  bool resetErrors = digitalRead(errorResetPin);
+  if(resetErrors)
+  {
+    oven1SrLatchFrozenWatchdog->srLatchFrozen = false;
+    oven1OverheatWatchdog->ovenOverheat = false;
+    oven1TemperatureSensor->temperatureSensorFailAlarm = false;
+    generalEmergency = false;
+
+    resetErrors = false;
+  }
 
   if(useOven1TemperatureSensor)
   {

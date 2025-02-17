@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.14">
+  <diagram name="Page-1" id="TcZ3BVX-rqAQDyCcv29H">
+    <mxGraphModel dx="607" dy="5456" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-1" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Start&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1219.9999999999998" y="-4460.004545454545" width="87.95454545454545" height="87.95454545454545" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-2" target="sU0uupm2rNcRxFqc1OuN-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-2" value="Trengs&lt;br&gt;&lt;div&gt;ekstern strømforsyning (PSU)?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1300.51" y="-4140" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-3" target="sU0uupm2rNcRxFqc1OuN-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-3" target="sU0uupm2rNcRxFqc1OuN-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-3" value="Strøm inn til&lt;div&gt;Arduino via USB&lt;/div&gt;&lt;div&gt;(LED på Arduino&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;lyser)?&lt;/span&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="-4260" width="131.02" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-1" target="sU0uupm2rNcRxFqc1OuN-16" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1380" y="-4360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-5" value="Sikre dette (se flytskjema &quot;krets er helt død&quot;)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1399.48" y="-4190" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-8" value="Nein" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1410.51" y="-4230" width="41.02" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-9" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1332.53" y="-4180" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-10" target="sU0uupm2rNcRxFqc1OuN-12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-10" value="Målt&lt;div&gt;spenning på&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;MP6 direkte fra&lt;/span&gt;&lt;/div&gt;&lt;div&gt;PSU?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1381.53" y="-4085" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-12" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1264" y="-3960" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1530" y="-3980" />
+              <mxPoint x="1530" y="-3960" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-12" value="Sikre dette (se flytskjema &quot;krets er helt død&quot;)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1471.53" y="-4020" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-13" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1391.53" y="-4120" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-15" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1471.53" y="-4060" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-16" target="sU0uupm2rNcRxFqc1OuN-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-16" target="sU0uupm2rNcRxFqc1OuN-40" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1090" y="-3870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-16" value="Kan Arduino&lt;div&gt;seriell overvåker åpnes?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1208.98" y="-4340" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-18" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="-4320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-20" target="sU0uupm2rNcRxFqc1OuN-23" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-20" value="Stopp &quot;interface&quot; i Python. Send &quot;1,1,NaN,NaN&quot; til Arduino for å simulere handshake. Sikre at Arduino-programmet kjører på Arduinoen." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1203.98" y="-3830" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-22" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1241" y="-4270" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-23" target="sU0uupm2rNcRxFqc1OuN-26" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-23" target="sU0uupm2rNcRxFqc1OuN-31" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1264.24" y="-3600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-23" value="Bytt ut LED.&lt;div&gt;Lyser den?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1208.98" y="-3710" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-26" value="Seriell timet ut og alt funker, eller feil i programmet" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1340.26" y="-3650" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-28" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="-3690" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-30" target="sU0uupm2rNcRxFqc1OuN-45" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1070.2600000000002" y="-3430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-30" target="sU0uupm2rNcRxFqc1OuN-35" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-30" value="Lyser LED-en?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1209.2400000000002" y="-3520" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-31" target="sU0uupm2rNcRxFqc1OuN-30" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-31" value="Last opp nytt program til Arduino med kun høy-signal til LED" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1204.2400000000002" y="-3600" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-33" value="Non" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="-3640" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-35" value="Feil i programmet, eller feil verdi for LED pinnenummer" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1340.2600000000002" y="-3460" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-37" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1301.2600000000002" y="-3500" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-38" target="sU0uupm2rNcRxFqc1OuN-49" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="HfpHErOvaTOBHMBzNEyH-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-38" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1264.2300000000002" y="-3200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-38" value="&lt;div&gt;Kontinuitsmåling&lt;/div&gt;&lt;div&gt;mellom J5 anode&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;og&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;LED-inngang,&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;og 180ohm mellom&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;J5 katode&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;og GND?&lt;/span&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1185.0000000000002" y="-3340" width="158.47" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-40" target="sU0uupm2rNcRxFqc1OuN-41" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-40" target="sU0uupm2rNcRxFqc1OuN-20" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-40" value="Sitter LED&lt;div&gt;ordentlig i holder, og holderen i sokkel?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1208.98" y="-3940" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-41" value="Fest dem godt" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1302.53" y="-3880" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-43" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1296" y="-3920" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="sU0uupm2rNcRxFqc1OuN-45" target="sU0uupm2rNcRxFqc1OuN-38" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-45" value="Skru av&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Arduino ved å plugge ut&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;USB.&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1204.2400000000002" y="-3410" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-46" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1242.7900000000002" y="-3450" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-49" value="Fiks kontaktene, hvis mulig" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1331.7900000000002" y="-3260" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sU0uupm2rNcRxFqc1OuN-51" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1321.7900000000002" y="-3300" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="HfpHErOvaTOBHMBzNEyH-4" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1241.2600000000002" y="-3240" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="HfpHErOvaTOBHMBzNEyH-5" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1241" y="-3870" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="HfpHErOvaTOBHMBzNEyH-10" value="Bytt LED" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1204.24" y="-3200" width="120" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

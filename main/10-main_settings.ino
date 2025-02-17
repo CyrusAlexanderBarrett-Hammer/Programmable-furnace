@@ -6,7 +6,8 @@ float oven1AbsoluteMax = 100;
 
 unsigned long externalPwmHighPeriod = 2000; //Maximum time the external PWM signal should be high. Slightly above actual intervals.
 int srLatchResetPin = 4;
-int srLatchOutputPin = 5;
+int srLatchOutputPin = 5; //5 for 3-32V PWM, 6 for 2.2-5V PWM
+int errorResetPin = 9; //Board-specific
 
 bool useOven1TemperatureSensor = true;
 int oven1TemperatureSensorCSPin = SS; //CS = Chip Select. Does not need to be correct if not using temperature sensor.

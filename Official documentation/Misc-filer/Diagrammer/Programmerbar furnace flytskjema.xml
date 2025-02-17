@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.11">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.14">
   <diagram name="Page-1" id="_grcCdo9Z8pwH8yet6ja">
-    <mxGraphModel dx="4097" dy="6905" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1434" dy="5456" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -9,10 +9,10 @@
           <mxGeometry x="2120" y="-3840" width="2410" height="2280" as="geometry" />
         </mxCell>
         <mxCell id="1XqUJJQUO8KrPeTQm9Ek-120" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="820" y="-3840" width="680" height="1430" as="geometry" />
+          <mxGeometry x="820" y="-3840" width="680" height="1530" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-18" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="950" y="-3520" width="420" height="1010" as="geometry" />
+          <mxGeometry x="950" y="-3520" width="420" height="1170" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="xRdDD_Ewpmtt7Lrd0bSM-1" target="MAua2RCMYOeUHzCo4B7X-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -24,56 +24,56 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-1" value="Read one valid&lt;div&gt;serial message&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;from PC&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-3210" width="120" height="60" as="geometry" />
+          <mxGeometry x="1100" y="-3139.4" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-3" target="MAua2RCMYOeUHzCo4B7X-5" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-3" value="Test serial connection" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-3126.31" width="120" height="40" as="geometry" />
+          <mxGeometry x="1100" y="-3055.71" width="120" height="40" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-5" target="MAua2RCMYOeUHzCo4B7X-7" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-5" value="Try reading temperature if user chose to, attempt recovery if failed" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-3066.31" width="120" height="60" as="geometry" />
+          <mxGeometry x="1100" y="-2995.71" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-7" target="MAua2RCMYOeUHzCo4B7X-9" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-7" value="Trigger temperature sensor fail alarm and set temperature to 2023 degrees (Labview standard) if recovery failed" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-2986.31" width="120" height="90" as="geometry" />
+          <mxGeometry x="1100" y="-2915.71" width="120" height="90" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-9" target="MAua2RCMYOeUHzCo4B7X-12" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-9" value="Start watchdog PWM frozen or overtemperature alarm (immune to 2023 degrees) if triggered" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-2876.31" width="120" height="90" as="geometry" />
+          <mxGeometry x="1100" y="-2805.71" width="120" height="90" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-12" target="MAua2RCMYOeUHzCo4B7X-14" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-12" value="Trigger emergency alarm if any other alarms on" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-2766.31" width="120" height="50" as="geometry" />
+          <mxGeometry x="1100" y="-2695.71" width="120" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="MAua2RCMYOeUHzCo4B7X-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-14" target="MAua2RCMYOeUHzCo4B7X-16" edge="1">
+        <mxCell id="MAua2RCMYOeUHzCo4B7X-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="MAua2RCMYOeUHzCo4B7X-14" target="0P_vrvwIcf3tuxFneYsH-3" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-14" value="Send any active alarms as serial messages to PC over serial" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-2696.31" width="120" height="60" as="geometry" />
+          <mxGeometry x="1100" y="-2625.71" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;endArrow=classic;startFill=0;endFill=1;" parent="1" source="MAua2RCMYOeUHzCo4B7X-16" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1159.9411764705883" y="-3230" as="targetPoint" />
+            <mxPoint x="1159.9411764705883" y="-3159.4" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="1160" y="-2526" />
-              <mxPoint x="1060" y="-2526" />
-              <mxPoint x="1060" y="-3230" />
+              <mxPoint x="1160" y="-2370" />
+              <mxPoint x="1060" y="-2370" />
+              <mxPoint x="1060" y="-3159" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-16" value="Trigger emergency alarm if force emergency stop message was received from PC." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1100" y="-2616.31" width="120" height="70" as="geometry" />
+          <mxGeometry x="1100" y="-2460" width="120" height="70" as="geometry" />
         </mxCell>
         <mxCell id="MAua2RCMYOeUHzCo4B7X-23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="xRdDD_Ewpmtt7Lrd0bSM-1" target="MAua2RCMYOeUHzCo4B7X-1" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -685,6 +685,15 @@
         </mxCell>
         <mxCell id="1XqUJJQUO8KrPeTQm9Ek-43" value="No" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="3163.3500000000004" y="-2673.5649166520047" width="60" height="14.302119815668203" as="geometry" />
+        </mxCell>
+        <mxCell id="0P_vrvwIcf3tuxFneYsH-1" value="Clear all alarms on alarm resett button press" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="-3234.73" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="0P_vrvwIcf3tuxFneYsH-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="0P_vrvwIcf3tuxFneYsH-3" target="MAua2RCMYOeUHzCo4B7X-16" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="0P_vrvwIcf3tuxFneYsH-3" value="Display serial status with serial status LED" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="-2539.54" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

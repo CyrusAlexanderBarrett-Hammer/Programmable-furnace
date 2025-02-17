@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.14">
+  <diagram name="Page-1" id="ai58SdJTtjb4d_oHuWId">
+    <mxGraphModel dx="819" dy="1615" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-exQeZD08P01ql7NRKnL-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-12" target="-exQeZD08P01ql7NRKnL-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-1" target="-exQeZD08P01ql7NRKnL-12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-1" value="Themosensor hvis&lt;div&gt;valgt og tilkoblet&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="555" y="-30" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-2" target="-exQeZD08P01ql7NRKnL-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-2" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="777" y="130" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="860" y="-95" />
+              <mxPoint x="860" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-2" target="6XJ9GlUqKAcnfwqwuB6a-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="-125" />
+              <mxPoint x="520" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-2" value="5V inn (via Arduino 500mA eller 5V-inngang)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="717" y="-140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-6" value="LED seriell indikator" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="914.5" y="585" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-10" target="-exQeZD08P01ql7NRKnL-58" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-10" value="USB PC" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1210" y="-30" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-12" target="-exQeZD08P01ql7NRKnL-39" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-12" target="-exQeZD08P01ql7NRKnL-44" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-10" target="-exQeZD08P01ql7NRKnL-12" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1240" y="325" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-12" target="-exQeZD08P01ql7NRKnL-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-12" value="Arduino" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="836.5" y="310" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-13" target="-exQeZD08P01ql7NRKnL-32" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-13" value="PWM&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;3-32V inn&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;hvis tilkoblet&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="717" y="-30" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-14" value="Strøm&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;styrt av&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;SSR, til last&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="585" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-15" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1121" y="325" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1121" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-15" value="Alarmer&lt;div&gt;resett-knapp&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="1061" y="-30" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="6XJ9GlUqKAcnfwqwuB6a-6" target="6XJ9GlUqKAcnfwqwuB6a-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="-50" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-19" value="SPI" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="600" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-23" target="-exQeZD08P01ql7NRKnL-26" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="777" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-23" value="Jumper for 3.3-32V eller 5V strømforsyning" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="727" y="160" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-24" target="-exQeZD08P01ql7NRKnL-26" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-24" value="PWM 2.2-5V inn&lt;div&gt;hvis tilkoblet&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="930" y="-30" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.488;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="-exQeZD08P01ql7NRKnL-26" target="-exQeZD08P01ql7NRKnL-12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-26" target="-exQeZD08P01ql7NRKnL-2" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="860" y="-70" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-26" value="Inverter + SR latch" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="860" y="220" width="70" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-32" target="-exQeZD08P01ql7NRKnL-23" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-32" value="SSR, styrer 5V strømforsyning" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="727" y="60" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-39" target="-exQeZD08P01ql7NRKnL-41" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="821.5" y="472.5" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="810" y="473" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-39" value="Test for overoppheting hvis valgt og PWR fryst, og tvungen stopp fra PC" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="412.5" width="123" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-41" target="-exQeZD08P01ql7NRKnL-14" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-41" value="SSR" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="783.5" y="520" width="53" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-44" target="-exQeZD08P01ql7NRKnL-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-44" value="Test for seriell kontakt via ping" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="914.5" y="412.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-46" value="Ved alt OK" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="810" y="480" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-57" value="UART" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1240" y="160" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-58" target="-exQeZD08P01ql7NRKnL-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-58" value="Ping Arduino periodisk fra PC med testmelding, se etter svar" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1210" y="-165" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-67" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1300" y="-50" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1425" y="-50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-67" value="Vis status for overoppheting hvis temperatur valgt og PWR fryst, med løsning, og målt temperatur hvis temperatur valgt" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="-165" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="-exQeZD08P01ql7NRKnL-72" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="-60" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1121" y="-60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-exQeZD08P01ql7NRKnL-72" value="Send tvungen&lt;div&gt;stopp hvis trigget&lt;/div&gt;&lt;div&gt;av bruker&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="1061" y="-165" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-6" value="5-48V strøm&lt;div&gt;inn til SSR hvis tilkoblet&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="370" y="-30" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="6XJ9GlUqKAcnfwqwuB6a-7" target="-exQeZD08P01ql7NRKnL-41" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6XJ9GlUqKAcnfwqwuB6a-7" value="Jumper for Intern 5-48V eller 5V strømforsyning" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="617" y="412.5" width="100" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

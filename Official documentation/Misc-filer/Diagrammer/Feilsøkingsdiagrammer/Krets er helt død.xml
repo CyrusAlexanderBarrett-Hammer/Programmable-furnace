@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.14">
+  <diagram name="Page-1" id="0OvocOVQNfUXvi5xMfT4">
+    <mxGraphModel dx="1793" dy="5651" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-1" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Start&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1112.2699999999998" y="-3740.0045454545448" width="87.95454545454545" height="87.95454545454545" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-104" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-3" target="2s_UqW6Fu6U4H15HwY7H-122" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1156.2500000000002" y="-2720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-108" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-3" target="2s_UqW6Fu6U4H15HwY7H-114" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1065" y="-2769" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-3" value="Noen lys fra Arduino?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1101.25" y="-2824" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-5" target="2s_UqW6Fu6U4H15HwY7H-22" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1329.91" y="-3375" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-5" target="2s_UqW6Fu6U4H15HwY7H-3" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="-2840" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-5" value="Trengs&lt;br&gt;&lt;div&gt;ekstern strømforsyning (PSU)?&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1101.25" y="-3400" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-9" target="2s_UqW6Fu6U4H15HwY7H-13" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-9" value="Sikring F1 røket?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1228.66" y="-3106.5" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-11" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1200.46" y="-3375" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-13" value="Bytt sikring" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1319.9999999999998" y="-3041.5" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-15" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1320" y="-3081.5" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-22" target="2s_UqW6Fu6U4H15HwY7H-27" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-22" value="PSU&lt;div&gt;forsøkt&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;tilkoblet,&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;på, og&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;med riktig spenning?&lt;/span&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1224.9099999999999" y="-3340" width="116.7" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-22" target="2s_UqW6Fu6U4H15HwY7H-33" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1089.64" y="-3255" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-26" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1261.34" y="-3260" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-27" value="Skru på strømforsyning" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1330.0000000000002" y="-3270" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-29" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1322.6800000000003" y="-3320" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-9" target="2s_UqW6Fu6U4H15HwY7H-46" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1283.66" y="-3001.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-31" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1270" y="-3031.5" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-33" target="2s_UqW6Fu6U4H15HwY7H-34" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-33" target="2s_UqW6Fu6U4H15HwY7H-9" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1200" y="-3054" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-33" value="Målt&lt;div&gt;kontinuitet&lt;div&gt;mellom strømforsyning og inngang&lt;/div&gt;&lt;div&gt;på kort?&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1220" y="-3224" width="127.32" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-34" value="Fest gjeldende ledning på nytt i begge ender" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1330" y="-3154" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-36" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1330" y="-3194" width="55" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-37" target="2s_UqW6Fu6U4H15HwY7H-40" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-37" target="2s_UqW6Fu6U4H15HwY7H-47" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1410" y="-2807" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-37" value="Koble&amp;nbsp;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;annet&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;apparat&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;i stikkontakten.&lt;/span&gt;&lt;div&gt;&lt;div&gt;Får du&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;strøm?&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="-2927" width="120" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-39" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1261.34" y="-3146" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-40" value="Skru på automatsikring" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1456.3400000000001" y="-2857" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-42" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1446.34" y="-2897" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-45" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1386.34" y="-2847" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-46" target="2s_UqW6Fu6U4H15HwY7H-37" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-46" target="2s_UqW6Fu6U4H15HwY7H-93" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1186" y="-2904" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-46" value="Målt spenning&lt;div&gt;på MP6 direkte&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;fra PSU?&lt;/span&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1228.66" y="-2999" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-47" target="2s_UqW6Fu6U4H15HwY7H-51" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-47" target="2s_UqW6Fu6U4H15HwY7H-55" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-47" value="PSU sikring røket?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1355" y="-2807" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-49" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1317.68" y="-2979" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-51" value="Bytt sikring" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1350.0000000000002" y="-2683" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-53" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1388.66" y="-2737" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-55" value="PSU i stykker. Bytt." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1458.6600000000003" y="-2747" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-57" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1448.66" y="-2787" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-66" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-1" target="2s_UqW6Fu6U4H15HwY7H-62" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1174.0900000000001" y="-3620" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-61" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1140.46" y="-3325" width="49.45" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-62" target="2s_UqW6Fu6U4H15HwY7H-73" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1156.27" y="-3520" />
+              <mxPoint x="1156.27" y="-3520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-62" target="2s_UqW6Fu6U4H15HwY7H-97" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-62" value="Er seriell USB tilkoblet?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1101.2500000000002" y="-3620" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-64" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1259.9999999999998" y="-2924" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-69" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1135.18" y="-3550" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-70" target="2s_UqW6Fu6U4H15HwY7H-82" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="864.02" y="-3380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1013.3199999999997" y="-3370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-70" target="2s_UqW6Fu6U4H15HwY7H-74" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-70" value="Er PC forsøkt skrudd på?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="960.0000000000002" y="-3450" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-78" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-73" target="2s_UqW6Fu6U4H15HwY7H-70" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-73" target="2s_UqW6Fu6U4H15HwY7H-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-73" value="Er PC på?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1101.2500000000002" y="-3510" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-74" value="Skru på PC" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="840" y="-3390" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-76" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1135.18" y="-3439" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-77" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="993.9299999999998" y="-3380" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-79" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="-3490" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-82" target="2s_UqW6Fu6U4H15HwY7H-83" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-92" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-82" target="2s_UqW6Fu6U4H15HwY7H-91" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-82" value="Koble&amp;nbsp;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;annet&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;apparat&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;i stikkontakten.&lt;/span&gt;&lt;div&gt;&lt;div&gt;Får du&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;strøm?&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="953.3" y="-3330" width="120" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-83" value="Skru på automatsikring" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="840.0000000000001" y="-3260" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-84" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="914.4599999999998" y="-3300" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-85" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="991.2499999999995" y="-3250" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-89" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="924.46" y="-3430" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-91" value="Prøv å bytt strømforsyning. Hvis problem ikke løst, er PC i stykker" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="953.3" y="-3210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-95" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-93" target="2s_UqW6Fu6U4H15HwY7H-94" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-101" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-93" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1156" y="-2849" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-93" value="Sitter kontakten godt i sokkelen på kortet?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1228.66" y="-2889" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-94" value="Fest sokkel" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1223.6600000000003" y="-2744" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-96" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1265" y="-2814" width="60" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-97" value="Koble til seriell USB" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1200.22" y="-3560" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-99" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1189.91" y="-3600" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-102" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1189.91" y="-2870" width="60" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-105" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1135.18" y="-2754" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-112" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-114" target="2s_UqW6Fu6U4H15HwY7H-110" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="903.93" y="-2682" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-109" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="-2800" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-116" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-110" target="2s_UqW6Fu6U4H15HwY7H-115" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-119" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-110" target="2s_UqW6Fu6U4H15HwY7H-118" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-110" value="Lys?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="848.93" y="-2693" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-114" value="Fest sokkel" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="843.9300000000003" y="-2747" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-115" value="Arduino i stykker. Bytt." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="738.9300000000003" y="-2633" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-117" value="Nei" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="808.93" y="-2673" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-118" value="USB-kontakt på Arduino i stykker. Lodd på ny." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="843.93" y="-2570" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-120" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="880.18" y="-2623" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-125" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-122" target="2s_UqW6Fu6U4H15HwY7H-124" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="991.25" y="-2640" as="sourcePoint" />
+            <mxPoint x="955.9300000000003" y="-2607.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-137" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2s_UqW6Fu6U4H15HwY7H-122" target="2s_UqW6Fu6U4H15HwY7H-139" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1156.25" y="-2570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-122" value="Målt&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;kontinuitet&lt;/span&gt;&lt;div&gt;&lt;div&gt;mellom hver&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;komponent&#39;s&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;5V og GND, og Arduino eller J4&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;sin 5V&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;og GND, avhengig&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;av hva som brukes?&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1059.25" y="-2718" width="194" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-124" value="Fiks gjeldende kontakt, hvis mulig" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="963.9300000000003" y="-2623" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-126" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1023.93" y="-2670" width="60" height="17" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-139" value="Problem et sted på resten av kortet. Eksperimentér med å plugge komponenter inn og ut, sende lurespennnger, og bytt om på hva som brukes for å finne hvor feilen ligger. Mål etter kortslutninger." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1080.0900000000001" y="-2560" width="152.32" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="2s_UqW6Fu6U4H15HwY7H-140" value="Ja" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1135.18" y="-2603" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
